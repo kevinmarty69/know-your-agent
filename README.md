@@ -133,4 +133,4 @@ pytest -q packages/sdk-python/tests
 - `SUPPORT.md`
 
 ## License
-MIT — see `LICENSE`.
+Apache-2.0 — see `LICENSE`.

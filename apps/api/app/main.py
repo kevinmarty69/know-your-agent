@@ -35,7 +35,7 @@ app = FastAPI(
         "name": "Know Your Agent Maintainers",
         "url": "https://github.com/know-your-agent/know-your-agent",
     },
-    license_info={"name": "MIT"},
+    license_info={"name": "Apache-2.0"},
     openapi_url="/openapi.json",
     docs_url="/docs",
     redoc_url="/redoc",
