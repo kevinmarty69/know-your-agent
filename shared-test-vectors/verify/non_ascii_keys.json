@@ -1,0 +1,21 @@
+{
+  "name": "non_ascii_keys",
+  "input": {
+    "agent_id": "dddddddd-dddd-dddd-dddd-dddddddddddd",
+    "workspace_id": "eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee",
+    "action_type": "purchase",
+    "target_service": "stripe_proxy",
+    "payload": {
+      "échec": 1,
+      "äction": 2,
+      "zeta": 3,
+      "alpha": 4
+    },
+    "capability_jti": "ffffffff-ffff-ffff-ffff-ffffffffffff"
+  },
+  "expected": {
+    "canonical_json": "{\"action_type\":\"purchase\",\"agent_id\":\"dddddddd-dddd-dddd-dddd-dddddddddddd\",\"capability_jti\":\"ffffffff-ffff-ffff-ffff-ffffffffffff\",\"payload\":{\"alpha\":4,\"zeta\":3,\"äction\":2,\"échec\":1},\"target_service\":\"stripe_proxy\",\"workspace_id\":\"eeeeeeee-eeee-eeee-eeee-eeeeeeeeeeee\"}",
+    "sha256_hex": "33f09bb370cd9b84850809ccbf4be513b8206fe5b6f6333975349abe9cb283f5",
+    "signature_encoding": "base64"
+  }
+}

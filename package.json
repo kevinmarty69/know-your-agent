@@ -1,0 +1,17 @@
+{
+  "name": "know-your-agent",
+  "private": true,
+  "version": "0.5.0",
+  "description": "Identity & Permission Layer for Autonomous Agents",
+  "workspaces": [
+    "apps/playground",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:playground": "pnpm --filter playground dev",
+    "build:playground": "pnpm --filter playground build",
+    "types:playground": "pnpm --filter playground types:api",
+    "build:sdk-js": "pnpm --filter @kya/sdk-js build",
+    "test:sdk-js": "pnpm --filter @kya/sdk-js test"
+  }
+}

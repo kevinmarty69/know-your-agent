@@ -1,0 +1,2500 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Know Your Agent API",
+    "summary": "Identity & Permission Layer for Autonomous Agents",
+    "description": "\n## Know Your Agent API\n\nIdentity & permission layer for autonomous agents.\n\n### Auth model (MVP)\nSensitive routes require `X-Workspace-Id` header. The request `workspace_id` must\nmatch this header, otherwise the API returns `WORKSPACE_MISMATCH`.\n\n`POST /workspaces` is a bootstrap route protected by `X-Bootstrap-Token`.\n\n### Error format\nBusiness errors are returned as:\n\n```json\n{\"detail\": {\"code\": \"SOME_CODE\", \"message\": \"Human readable message\"}}\n```\n\n### Main flow\n1. Create agent\n2. Create policy\n3. Bind policy to agent\n4. Request capability\n5. Verify signed action\n6. Query/export audit logs\n7. Check audit chain integrity\n",
+    "termsOfService": "https://github.com/know-your-agent/know-your-agent",
+    "contact": {
+      "name": "Know Your Agent Maintainers",
+      "url": "https://github.com/know-your-agent/know-your-agent"
+    },
+    "license": {
+      "name": "MIT"
+    },
+    "version": "0.5.0",
+    "x-logo": {
+      "url": "https://raw.githubusercontent.com/redocly/redoc/main/demo/logo.png",
+      "altText": "Know Your Agent"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:8000",
+      "description": "Local development"
+    }
+  ],
+  "paths": {
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health Check",
+        "description": "Returns API, PostgreSQL and Redis health status.",
+        "operationId": "health_check_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "additionalProperties": {
+                    "type": "string"
+                  },
+                  "type": "object",
+                  "title": "Response Health Check Health Get"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/workspaces": {
+      "post": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Create Workspace",
+        "description": "Creates a workspace for local bootstrap/dev flows.",
+        "operationId": "create_workspace_endpoint_workspaces_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkspaceCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Workspace slug already exists.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_SLUG_ALREADY_EXISTS",
+                    "message": "Workspace slug already exists"
+                  }
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Workspace bootstrap endpoint disabled by configuration.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_BOOTSTRAP_DISABLED",
+                    "message": "Workspace bootstrap is disabled; configure KYA_WORKSPACE_BOOTSTRAP_TOKEN"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/workspaces/{workspace_id}": {
+      "get": {
+        "tags": [
+          "workspaces"
+        ],
+        "summary": "Get Workspace",
+        "description": "Fetches a workspace by id within authenticated tenant context.",
+        "operationId": "get_workspace_endpoint_workspaces__workspace_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Workspace Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkspaceResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Workspace not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_NOT_FOUND",
+                    "message": "Workspace not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents": {
+      "post": {
+        "tags": [
+          "agents"
+        ],
+        "summary": "Create Agent",
+        "description": "Registers a new agent identity in a workspace.",
+        "operationId": "create_agent_endpoint_agents_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Agent fingerprint already exists.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AGENT_FINGERPRINT_ALREADY_EXISTS",
+                    "message": "An agent with this public key already exists"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/agents/{agent_id}": {
+      "get": {
+        "tags": [
+          "agents"
+        ],
+        "summary": "Get Agent",
+        "description": "Fetches a single agent by id.",
+        "operationId": "get_agent_endpoint_agents__agent_id__get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Agent Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AGENT_NOT_FOUND",
+                    "message": "Agent not found"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/agents/{agent_id}/revoke": {
+      "post": {
+        "tags": [
+          "agents"
+        ],
+        "summary": "Revoke Agent",
+        "description": "Revokes an active agent. Future actions are denied.",
+        "operationId": "revoke_agent_endpoint_agents__agent_id__revoke_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Agent Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRevokeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentRevokeResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AGENT_NOT_FOUND",
+                    "message": "Agent not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Agent already revoked.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AGENT_ALREADY_REVOKED",
+                    "message": "Agent is already revoked"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/policies": {
+      "post": {
+        "tags": [
+          "policies"
+        ],
+        "summary": "Create Policy",
+        "description": "Creates a versioned policy in a workspace.",
+        "operationId": "create_policy_endpoint_policies_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyCreateRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Policy version already exists.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "POLICY_VERSION_ALREADY_EXISTS",
+                    "message": "Policy version already exists"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/agents/{agent_id}/bind_policy": {
+      "post": {
+        "tags": [
+          "policies"
+        ],
+        "summary": "Bind Policy To Agent",
+        "description": "Binds a policy to an agent, deactivating previous active binding if any.",
+        "operationId": "bind_policy_endpoint_agents__agent_id__bind_policy_post",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "agent_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "title": "Agent Id"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PolicyBindRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PolicyBindingResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent or policy not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "POLICY_OR_AGENT_NOT_FOUND",
+                    "message": "Agent or policy not found"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Agent is revoked and cannot be bound.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AGENT_REVOKED",
+                    "message": "Agent is revoked"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/capabilities/request": {
+      "post": {
+        "tags": [
+          "capabilities"
+        ],
+        "summary": "Issue Capability",
+        "description": "Issues a signed capability token if agent/policy constraints allow it.",
+        "operationId": "request_capability_endpoint_capabilities_request_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CapabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CapabilityIssueResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Agent or policy binding not found.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "POLICY_NOT_BOUND",
+                    "message": "No active policy binding found for this agent"
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Agent revoked.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AGENT_REVOKED",
+                    "message": "Agent is revoked"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/verify": {
+      "post": {
+        "tags": [
+          "verify"
+        ],
+        "summary": "Verify Action",
+        "description": "Validates an agent action request against capability token, signature, policy binding and runtime constraints.",
+        "operationId": "verify_endpoint_verify_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifyResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ]
+      }
+    },
+    "/audit/events": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "List Audit Events",
+        "description": "Returns paginated audit events with optional filters.",
+        "operationId": "list_audit_events_endpoint_audit_events_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Workspace identifier",
+              "title": "Workspace Id"
+            },
+            "description": "Workspace identifier"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start datetime",
+              "title": "From"
+            },
+            "description": "Start datetime"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End datetime",
+              "title": "To"
+            },
+            "description": "End datetime"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by event type",
+              "title": "Event Type"
+            },
+            "description": "Filter by event type"
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by subject id",
+              "title": "Subject Id"
+            },
+            "description": "Filter by subject id"
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "ALLOW",
+                    "DENY"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ALLOW or DENY filter",
+              "title": "Decision"
+            },
+            "description": "ALLOW or DENY filter"
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 200,
+              "minimum": 1,
+              "description": "Page size",
+              "default": 50,
+              "title": "Limit"
+            },
+            "description": "Page size"
+          },
+          {
+            "name": "offset",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "minimum": 0,
+              "description": "Page offset",
+              "default": 0,
+              "title": "Offset"
+            },
+            "description": "Page offset"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditEventsListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/export.json": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Export Audit Events (JSON)",
+        "description": "Exports filtered audit events as JSON.",
+        "operationId": "export_audit_json_endpoint_audit_export_json_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Workspace identifier",
+              "title": "Workspace Id"
+            },
+            "description": "Workspace identifier"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start datetime",
+              "title": "From"
+            },
+            "description": "Start datetime"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End datetime",
+              "title": "To"
+            },
+            "description": "End datetime"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by event type",
+              "title": "Event Type"
+            },
+            "description": "Filter by event type"
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by subject id",
+              "title": "Subject Id"
+            },
+            "description": "Filter by subject id"
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "ALLOW",
+                    "DENY"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ALLOW or DENY filter",
+              "title": "Decision"
+            },
+            "description": "ALLOW or DENY filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuditEventResponse"
+                  },
+                  "title": "Response Export Audit Json Endpoint Audit Export Json Get"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/export.csv": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Export Audit Events (CSV)",
+        "description": "Exports filtered audit events as CSV.",
+        "operationId": "export_audit_csv_endpoint_audit_export_csv_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Workspace identifier",
+              "title": "Workspace Id"
+            },
+            "description": "Workspace identifier"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start datetime",
+              "title": "From"
+            },
+            "description": "Start datetime"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End datetime",
+              "title": "To"
+            },
+            "description": "End datetime"
+          },
+          {
+            "name": "event_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by event type",
+              "title": "Event Type"
+            },
+            "description": "Filter by event type"
+          },
+          {
+            "name": "subject_id",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by subject id",
+              "title": "Subject Id"
+            },
+            "description": "Filter by subject id"
+          },
+          {
+            "name": "decision",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "ALLOW",
+                    "DENY"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "ALLOW or DENY filter",
+              "title": "Decision"
+            },
+            "description": "ALLOW or DENY filter"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/audit/integrity/check": {
+      "get": {
+        "tags": [
+          "audit"
+        ],
+        "summary": "Check Audit Chain Integrity",
+        "description": "Verifies hash-chain continuity in a workspace. Returns OK, BROKEN or PARTIAL.",
+        "operationId": "check_audit_integrity_endpoint_audit_integrity_check_get",
+        "security": [
+          {
+            "APIKeyHeader": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "workspace_id",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Workspace identifier",
+              "title": "Workspace Id"
+            },
+            "description": "Workspace identifier"
+          },
+          {
+            "name": "from",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Start datetime",
+              "title": "From"
+            },
+            "description": "Start datetime"
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "End datetime",
+              "title": "To"
+            },
+            "description": "End datetime"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AuditIntegrityResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Missing or invalid authentication headers.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "AUTH_WORKSPACE_MISSING",
+                    "message": "Missing X-Workspace-Id header"
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Workspace mismatch with authenticated context.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "WORKSPACE_MISMATCH",
+                    "message": "Workspace does not match authenticated context"
+                  }
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error on payload/query params.",
+            "content": {
+              "application/json": {
+                "example": {
+                  "detail": {
+                    "code": "VALIDATION_ERROR",
+                    "message": "Query param 'from' must be <= 'to'"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/metrics": {
+      "get": {
+        "tags": [
+          "metrics"
+        ],
+        "summary": "Metrics Endpoint",
+        "operationId": "metrics_endpoint_metrics_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AgentCreateRequest": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Workspace identifier (must match X-Workspace-Id)."
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Human readable agent name."
+          },
+          "public_key": {
+            "type": "string",
+            "title": "Public Key",
+            "description": "Base64-encoded Ed25519 public key (32 bytes)."
+          },
+          "runtime_type": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 64
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runtime Type",
+            "description": "Optional runtime label (e.g. codex, internal-bot)."
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata",
+            "description": "Free-form metadata."
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "name",
+          "public_key"
+        ],
+        "title": "AgentCreateRequest"
+      },
+      "AgentResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "public_key": {
+            "type": "string",
+            "title": "Public Key"
+          },
+          "key_alg": {
+            "type": "string",
+            "title": "Key Alg"
+          },
+          "fingerprint": {
+            "type": "string",
+            "title": "Fingerprint"
+          },
+          "runtime_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Runtime Type"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Metadata"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "revoked_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoked At"
+          },
+          "revoke_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Revoke Reason"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "status",
+          "public_key",
+          "key_alg",
+          "fingerprint",
+          "runtime_type",
+          "metadata",
+          "created_at",
+          "revoked_at",
+          "revoke_reason"
+        ],
+        "title": "AgentResponse"
+      },
+      "AgentRevokeRequest": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Workspace identifier (must match X-Workspace-Id)."
+          },
+          "reason": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Reason",
+            "description": "Reason for revocation."
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "reason"
+        ],
+        "title": "AgentRevokeRequest"
+      },
+      "AgentRevokeResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "revoked_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Revoked At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "status",
+          "revoked_at"
+        ],
+        "title": "AgentRevokeResponse"
+      },
+      "AuditEventResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "event_time": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Event Time"
+          },
+          "event_type": {
+            "type": "string",
+            "title": "Event Type"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "actor_type": {
+            "type": "string",
+            "title": "Actor Type"
+          },
+          "actor_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Actor Id"
+          },
+          "subject_type": {
+            "type": "string",
+            "title": "Subject Type"
+          },
+          "subject_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Subject Id"
+          },
+          "event_data": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Event Data"
+          },
+          "prev_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Prev Hash"
+          },
+          "event_hash": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Event Hash"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "event_time",
+          "event_type",
+          "workspace_id",
+          "actor_type",
+          "actor_id",
+          "subject_type",
+          "subject_id",
+          "event_data",
+          "prev_hash",
+          "event_hash"
+        ],
+        "title": "AuditEventResponse"
+      },
+      "AuditEventsListResponse": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AuditEventResponse"
+            },
+            "type": "array",
+            "title": "Items"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          },
+          "limit": {
+            "type": "integer",
+            "title": "Limit"
+          },
+          "offset": {
+            "type": "integer",
+            "title": "Offset"
+          }
+        },
+        "type": "object",
+        "required": [
+          "items",
+          "count",
+          "limit",
+          "offset"
+        ],
+        "title": "AuditEventsListResponse"
+      },
+      "AuditIntegrityResponse": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OK",
+              "BROKEN",
+              "PARTIAL"
+            ],
+            "title": "Status"
+          },
+          "checked_count": {
+            "type": "integer",
+            "title": "Checked Count"
+          },
+          "broken_at_event_id": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "uuid"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Broken At Event Id"
+          },
+          "message": {
+            "type": "string",
+            "title": "Message"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "status",
+          "checked_count",
+          "broken_at_event_id",
+          "message"
+        ],
+        "title": "AuditIntegrityResponse"
+      },
+      "CapabilityIssueResponse": {
+        "properties": {
+          "capability_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Capability Id"
+          },
+          "token": {
+            "type": "string",
+            "title": "Token"
+          },
+          "jti": {
+            "type": "string",
+            "title": "Jti"
+          },
+          "issued_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Issued At"
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Expires At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "capability_id",
+          "token",
+          "jti",
+          "issued_at",
+          "expires_at"
+        ],
+        "title": "CapabilityIssueResponse"
+      },
+      "CapabilityRequest": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Workspace identifier (must match X-Workspace-Id)."
+          },
+          "agent_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Agent Id"
+          },
+          "action": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Action",
+            "description": "Requested action."
+          },
+          "target_service": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Target Service",
+            "description": "Target service id."
+          },
+          "requested_scopes": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Requested Scopes",
+            "description": "Requested capability scopes."
+          },
+          "requested_limits": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Requested Limits",
+            "description": "Requested limits."
+          },
+          "ttl_minutes": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "maximum": 30.0,
+                "minimum": 5.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ttl Minutes",
+            "description": "Capability TTL."
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "agent_id",
+          "action",
+          "target_service",
+          "requested_scopes"
+        ],
+        "title": "CapabilityRequest"
+      },
+      "PolicyBindRequest": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Workspace identifier (must match X-Workspace-Id)."
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id",
+            "description": "Policy id to bind."
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "policy_id"
+        ],
+        "title": "PolicyBindRequest"
+      },
+      "PolicyBindingResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "agent_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Agent Id"
+          },
+          "policy_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Policy Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "bound_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Bound At"
+          },
+          "unbound_at": {
+            "anyOf": [
+              {
+                "type": "string",
+                "format": "date-time"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unbound At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workspace_id",
+          "agent_id",
+          "policy_id",
+          "status",
+          "bound_at",
+          "unbound_at"
+        ],
+        "title": "PolicyBindingResponse"
+      },
+      "PolicyCreateRequest": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Workspace identifier (must match X-Workspace-Id)."
+          },
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "description": "Policy name."
+          },
+          "version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Version",
+            "description": "Policy version, unique per (workspace, name)."
+          },
+          "schema_version": {
+            "type": "integer",
+            "minimum": 1.0,
+            "title": "Schema Version",
+            "description": "Policy schema version.",
+            "default": 1
+          },
+          "policy_json": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Policy Json",
+            "description": "Policy payload."
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "name",
+          "version",
+          "policy_json"
+        ],
+        "title": "PolicyCreateRequest"
+      },
+      "PolicyResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "version": {
+            "type": "integer",
+            "title": "Version"
+          },
+          "is_active": {
+            "type": "boolean",
+            "title": "Is Active"
+          },
+          "schema_version": {
+            "type": "integer",
+            "title": "Schema Version"
+          },
+          "policy_json": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Policy Json"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "workspace_id",
+          "name",
+          "version",
+          "is_active",
+          "schema_version",
+          "policy_json",
+          "created_at"
+        ],
+        "title": "PolicyResponse"
+      },
+      "VerifyRequest": {
+        "properties": {
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Workspace Id",
+            "description": "Workspace identifier (must match X-Workspace-Id)."
+          },
+          "agent_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Agent Id"
+          },
+          "action_type": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1,
+            "title": "Action Type"
+          },
+          "target_service": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Target Service"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          },
+          "signature": {
+            "type": "string",
+            "title": "Signature",
+            "description": "Base64-encoded Ed25519 signature."
+          },
+          "capability_token": {
+            "type": "string",
+            "title": "Capability Token",
+            "description": "JWT capability token."
+          },
+          "request_context": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Request Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "workspace_id",
+          "agent_id",
+          "action_type",
+          "target_service",
+          "payload",
+          "signature",
+          "capability_token"
+        ],
+        "title": "VerifyRequest"
+      },
+      "VerifyResponse": {
+        "properties": {
+          "decision": {
+            "type": "string",
+            "enum": [
+              "ALLOW",
+              "DENY"
+            ],
+            "title": "Decision"
+          },
+          "reason_code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason Code",
+            "description": "Reason code when decision is DENY, otherwise null."
+          },
+          "audit_event_id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Audit Event Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "decision",
+          "audit_event_id"
+        ],
+        "title": "VerifyResponse"
+      },
+      "WorkspaceCreateRequest": {
+        "properties": {
+          "name": {
+            "type": "string",
+            "maxLength": 255,
+            "minLength": 3,
+            "title": "Name",
+            "description": "Human readable workspace name."
+          },
+          "slug": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 80,
+                "minLength": 3
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Slug",
+            "description": "Optional unique slug. Lowercase letters, numbers and dashes."
+          }
+        },
+        "type": "object",
+        "required": [
+          "name"
+        ],
+        "title": "WorkspaceCreateRequest"
+      },
+      "WorkspaceResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "created_at"
+        ],
+        "title": "WorkspaceResponse"
+      }
+    },
+    "securitySchemes": {
+      "APIKeyHeader": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "X-Actor-Id"
+      }
+    }
+  },
+  "tags": [
+    {
+      "name": "health",
+      "description": "Runtime liveness/readiness checks for API, PostgreSQL and Redis."
+    },
+    {
+      "name": "workspaces",
+      "description": "Workspace bootstrap and tenant lookup endpoints."
+    },
+    {
+      "name": "agents",
+      "description": "Agent identity lifecycle: create, read, revoke."
+    },
+    {
+      "name": "policies",
+      "description": "Policy registry and binding policies to agents."
+    },
+    {
+      "name": "capabilities",
+      "description": "Capability token issuance for delegated actions."
+    },
+    {
+      "name": "verify",
+      "description": "Verification engine endpoint returning ALLOW/DENY decisions."
+    },
+    {
+      "name": "audit",
+      "description": "Audit trail query, export, and integrity verification."
+    }
+  ],
+  "externalDocs": {
+    "description": "Project documentation",
+    "url": "https://github.com/know-your-agent/know-your-agent"
+  }
+}

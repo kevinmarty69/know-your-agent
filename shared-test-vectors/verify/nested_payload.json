@@ -1,0 +1,26 @@
+{
+  "name": "nested_payload",
+  "input": {
+    "agent_id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+    "workspace_id": "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+    "action_type": "calendar_write",
+    "target_service": "google_calendar",
+    "payload": {
+      "tool": "calendar_write",
+      "meta": {
+        "priority": 2,
+        "labels": ["vip", "followup"]
+      },
+      "window": {
+        "from": "2026-02-26T10:00:00Z",
+        "to": "2026-02-26T10:30:00Z"
+      }
+    },
+    "capability_jti": "cccccccc-cccc-cccc-cccc-cccccccccccc"
+  },
+  "expected": {
+    "canonical_json": "{\"action_type\":\"calendar_write\",\"agent_id\":\"aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa\",\"capability_jti\":\"cccccccc-cccc-cccc-cccc-cccccccccccc\",\"payload\":{\"meta\":{\"labels\":[\"vip\",\"followup\"],\"priority\":2},\"tool\":\"calendar_write\",\"window\":{\"from\":\"2026-02-26T10:00:00Z\",\"to\":\"2026-02-26T10:30:00Z\"}},\"target_service\":\"google_calendar\",\"workspace_id\":\"bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb\"}",
+    "sha256_hex": "177f0f5861bd1bdde0f2a3008c34da15c124d559e756fc90fae84e4e953642e0",
+    "signature_encoding": "base64"
+  }
+}

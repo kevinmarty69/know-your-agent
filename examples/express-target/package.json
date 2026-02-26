@@ -1,0 +1,13 @@
+{
+  "name": "kya-express-target",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "@kya/sdk-js": "file:../../packages/sdk-js",
+    "express": "^4.21.2"
+  }
+}
