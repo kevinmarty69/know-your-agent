@@ -8,6 +8,7 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 ## [Unreleased]
 
 ### Added
+
 - Open source governance and contribution baseline documents.
 - Workspace bootstrap endpoint (`POST /workspaces`) and workspace get route.
 - Internal playground updates for workspace management and dev signing helpers.
@@ -18,12 +19,14 @@ and this project uses [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 - SDK Python package (`kya-sdk`) with sync/async clients and vector compatibility tests.
 
 ### Changed
+
 - Canonical key ordering hardened to pure lexicographic ordering (no locale sorting).
 - CI expanded with dedicated `sdk_js`, `sdk_python`, and `examples_smoke` jobs.
 
-## [0.5.0] - 2026-02-25
+## [0.5.1] - 2026-02-26
 
 ### Added
+
 - MVP backend capabilities including:
   - agent registry
   - policy binding
