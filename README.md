@@ -51,6 +51,29 @@ This prints `KYA_JWT_PRIVATE_KEY_PEM` and `KYA_JWT_PUBLIC_KEY_PEM` values to pas
 API base URL:
 - `http://localhost:8000`
 
+## Protect A Purchase In 5 Minutes
+Start API first (see Quickstart), then:
+
+```bash
+cd examples/purchase-target
+cp .env.example .env
+# put your API bootstrap token in KYA_BOOTSTRAP_TOKEN
+npm install
+npm run dev
+```
+
+In a second terminal:
+
+```bash
+cd examples/purchase-target
+set -a; source .env; set +a
+npm run demo
+```
+
+The demo does full API-first setup (`/workspaces`, `/agents`, `/policies`, `/bind`, `/capabilities/request`) and runs:
+- ALLOW purchase
+- DENY purchase (`SPEND_LIMIT_EXCEEDED`)
+
 ## Verify Flow
 1. Create workspace + agent.
 2. Create and bind policy.
@@ -123,6 +146,7 @@ pnpm --filter @kya/sdk-js build
 Integration examples:
 - `examples/express-target/README.md`
 - `examples/fastapi-target/README.md`
+- `examples/purchase-target/README.md`
 
 Runnable examples:
 ```bash
@@ -136,6 +160,7 @@ cd examples/fastapi-target && python -m venv .venv && source .venv/bin/activate 
 Smoke check for examples:
 ```bash
 bash scripts/examples_smoke.sh
+bash scripts/examples_purchase_smoke.sh
 ```
 
 ## SDK Python (MVP)
@@ -158,6 +183,12 @@ pytest -q packages/sdk-python/tests
 
 Detailed architecture:
 - `docs/ARCHITECTURE_V01.md`
+
+## Common Errors
+- `WORKSPACE_NOT_FOUND`: workspace id invalid or missing in current tenant context.
+- `POLICY_NOT_BOUND`: capability request/verify done before binding an active policy to the agent.
+- `SIGNATURE_INVALID`: signed payload does not match expected canonical envelope/hash.
+- `CAPABILITY_EXPIRED`: capability token expired; request a new capability.
 
 ## Contributing
 - `CONTRIBUTING.md`

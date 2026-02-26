@@ -30,6 +30,7 @@ pnpm --filter playground types:api
 pnpm --filter @kya/sdk-js test
 pnpm --filter @kya/sdk-js build
 bash scripts/examples_smoke.sh
+bash scripts/examples_purchase_smoke.sh
 python -m pip install -e "packages/sdk-python[dev]"
 pytest -q packages/sdk-python/tests
 ```
@@ -58,6 +59,7 @@ A contribution is ready when:
 - `pnpm --filter playground build` passes (if frontend changed)
 - `pnpm --filter @kya/sdk-js test` passes (if SDK changed)
 - `bash scripts/examples_smoke.sh` passes (if examples changed)
+- `bash scripts/examples_purchase_smoke.sh` passes (if purchase integration flow changed)
 - `pytest -q packages/sdk-python/tests` passes (if sdk-python changed)
 - docs are updated if needed
 - PR description explains what changed and why

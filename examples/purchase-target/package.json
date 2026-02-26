@@ -1,0 +1,14 @@
+{
+  "name": "kya-purchase-target",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "node server.js",
+    "demo": "node agent-demo.js"
+  },
+  "dependencies": {
+    "@kya/sdk-js": "file:../../packages/sdk-js",
+    "express": "^4.21.2"
+  }
+}

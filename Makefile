@@ -1,4 +1,4 @@
-.PHONY: dev install test lint fmt migrate-up verify-all generate-dev-keypair
+.PHONY: dev install test lint fmt migrate-up verify-all generate-dev-keypair examples-purchase-smoke
 
 install:
 	cd apps/api && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements-dev.txt
@@ -23,3 +23,6 @@ verify-all:
 
 generate-dev-keypair:
 	bash scripts/generate_dev_keypair.sh
+
+examples-purchase-smoke:
+	bash scripts/examples_purchase_smoke.sh
