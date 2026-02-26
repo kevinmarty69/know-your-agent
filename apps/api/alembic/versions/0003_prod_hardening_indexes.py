@@ -1,14 +1,14 @@
 """prod hardening indexes
 
 Revision ID: 0003_prod_hardening_indexes
-Revises: 0002_sprint4_audit_integrity_indexes
+Revises: 0002_sprint4_audit_idx
 Create Date: 2026-02-26 12:30:00
 """
 
 from alembic import op
 
 revision = "0003_prod_hardening_indexes"
-down_revision = "0002_sprint4_audit_integrity_indexes"
+down_revision = "0002_sprint4_audit_idx"
 branch_labels = None
 depends_on = None
 
