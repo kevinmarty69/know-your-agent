@@ -12,6 +12,7 @@ From repository root:
 ```bash
 make install
 cp apps/api/.env.example apps/api/.env
+make generate-dev-keypair
 docker compose up -d
 make migrate-up
 make lint

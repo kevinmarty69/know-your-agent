@@ -22,10 +22,18 @@ From repository root:
 ```bash
 make install
 cp apps/api/.env.example apps/api/.env
+# optional: copy root template for cross-component env hints
+cp .env.example .env
 docker compose up -d
 make migrate-up
 make dev
 ```
+
+Generate your dev keypair (required before starting API):
+```bash
+make generate-dev-keypair
+```
+This prints `KYA_JWT_PRIVATE_KEY_PEM` and `KYA_JWT_PUBLIC_KEY_PEM` values to paste into `apps/api/.env`.
 
 API base URL:
 - `http://localhost:8000`
@@ -45,6 +53,7 @@ make lint
 make test
 make migrate-up
 make verify-all
+make generate-dev-keypair
 ```
 
 ## Front Playground (Internal Dev Tool)

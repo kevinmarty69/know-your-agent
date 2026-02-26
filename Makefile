@@ -1,4 +1,4 @@
-.PHONY: dev install test lint fmt migrate-up verify-all
+.PHONY: dev install test lint fmt migrate-up verify-all generate-dev-keypair
 
 install:
 	cd apps/api && python3 -m venv .venv && . .venv/bin/activate && pip install -r requirements-dev.txt
@@ -20,3 +20,6 @@ migrate-up:
 
 verify-all:
 	bash scripts/verify_all.sh
+
+generate-dev-keypair:
+	bash scripts/generate_dev_keypair.sh
