@@ -31,8 +31,8 @@ wait_for_url() {
   return 1
 }
 
-if [[ -z "${KYA_BOOTSTRAP_TOKEN:-}" ]]; then
-  echo "Missing required env var: KYA_BOOTSTRAP_TOKEN" >&2
+if [[ -z "${LIMIQ_BOOTSTRAP_TOKEN:-}" ]]; then
+  echo "Missing required env var: LIMIQ_BOOTSTRAP_TOKEN" >&2
   exit 1
 fi
 
@@ -47,8 +47,8 @@ echo "[purchase-smoke] Start purchase-target"
 (
   cd "$PURCHASE_DIR"
   npm install --no-audit --no-fund --package-lock=false >/dev/null
-  PORT=3002 KYA_BASE_URL="${KYA_BASE_URL:-http://localhost:8000}" npm run dev
-) >/tmp/kya-purchase-target-smoke.log 2>&1 &
+  PORT=3002 LIMIQ_BASE_URL="${LIMIQ_BASE_URL:-http://localhost:8000}" npm run dev
+) >/tmp/limiq-purchase-target-smoke.log 2>&1 &
 TARGET_PID="$!"
 
 wait_for_url "http://localhost:3002/health" 20 1 || {
@@ -59,9 +59,9 @@ wait_for_url "http://localhost:3002/health" 20 1 || {
 echo "[purchase-smoke] Run ALLOW + DENY demo"
 (
   cd "$PURCHASE_DIR"
-  KYA_BASE_URL="${KYA_BASE_URL:-http://localhost:8000}" \
+  LIMIQ_BASE_URL="${LIMIQ_BASE_URL:-http://localhost:8000}" \
   TARGET_BASE_URL="http://localhost:3002" \
-  KYA_BOOTSTRAP_TOKEN="$KYA_BOOTSTRAP_TOKEN" \
+  LIMIQ_BOOTSTRAP_TOKEN="$LIMIQ_BOOTSTRAP_TOKEN" \
   npm run demo
 )
 

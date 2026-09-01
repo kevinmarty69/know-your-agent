@@ -108,8 +108,8 @@ def test_metrics_exposed_and_updated(client: TestClient, workspace_id: str) -> N
 
     metrics = client.get("/metrics")
     assert metrics.status_code == 200
-    assert "kya_verify_total" in metrics.text
-    assert "kya_verify_latency_seconds" in metrics.text
-    assert "kya_audit_integrity_total" in metrics.text
+    assert "limiq_verify_total" in metrics.text
+    assert "limiq_verify_latency_seconds" in metrics.text
+    assert "limiq_audit_integrity_total" in metrics.text
     assert 'decision="ALLOW"' in metrics.text
     assert 'status="OK"' in metrics.text

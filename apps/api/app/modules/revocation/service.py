@@ -11,7 +11,7 @@ from app.db.session import redis_client
 from app.models.capability import Capability
 from app.models.revocation import Revocation
 
-logger = logging.getLogger("kya.revocation")
+logger = logging.getLogger("limiq.revocation")
 
 
 def _jti_key(jti: str) -> str:

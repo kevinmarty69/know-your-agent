@@ -32,10 +32,10 @@ app = FastAPI(
     summary="Identity & Permission Layer for Autonomous Agents",
     description=API_DESCRIPTION,
     version="0.5.0",
-    terms_of_service="https://github.com/qurveai/know-your-agent",
+    terms_of_service="https://github.com/qurveai/limiq.io",
     contact={
         "name": "Limiq.io Maintainers",
-        "url": "https://github.com/qurveai/know-your-agent",
+        "url": "https://github.com/qurveai/limiq.io",
     },
     license_info={"name": "Apache-2.0"},
     openapi_url="/openapi.json",

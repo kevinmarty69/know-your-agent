@@ -1,8 +1,8 @@
 import { buildSignedRequest, generateKeys } from "@limiq/sdk-js"
 
-const KYA_BASE_URL = process.env.KYA_BASE_URL || "http://localhost:8000"
+const LIMIQ_BASE_URL = process.env.LIMIQ_BASE_URL || "http://localhost:8000"
 const TARGET_BASE_URL = process.env.TARGET_BASE_URL || "http://localhost:3002"
-const BOOTSTRAP_TOKEN = process.env.KYA_BOOTSTRAP_TOKEN || ""
+const BOOTSTRAP_TOKEN = process.env.LIMIQ_BOOTSTRAP_TOKEN || ""
 const DEMO_POLICY_MAX_SPEND = Number(process.env.DEMO_POLICY_MAX_SPEND || "100")
 const ALLOW_AMOUNT = Number(process.env.DEMO_ALLOW_AMOUNT || "49")
 const DENY_AMOUNT = Number(process.env.DEMO_DENY_AMOUNT || "149")
@@ -27,8 +27,8 @@ async function parseResponseJson(resp) {
   }
 }
 
-async function postKya(path, body, headers = {}) {
-  const resp = await fetch(`${KYA_BASE_URL}${path}`, {
+async function postLimiq(path, body, headers = {}) {
+  const resp = await fetch(`${LIMIQ_BASE_URL}${path}`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -45,12 +45,14 @@ async function postKya(path, body, headers = {}) {
   return data
 }
 
-async function postTargetPurchase(body) {
+async function postTargetPurchase(body, workspaceKey) {
+  // ponytail: trusted local setup harness; production targets load this key server-side.
   const resp = await fetch(`${TARGET_BASE_URL}/purchase`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
       Accept: "application/json",
+      "X-Workspace-Key": workspaceKey,
     },
     body: JSON.stringify(body),
   })
@@ -73,13 +75,13 @@ function printFailure(text) {
 
 async function run() {
   if (!BOOTSTRAP_TOKEN) {
-    throw new Error("Missing KYA_BOOTSTRAP_TOKEN env var (required for POST /workspaces)")
+    throw new Error("Missing LIMIQ_BOOTSTRAP_TOKEN env var (required for POST /workspaces)")
   }
 
-  printStep(`Limiq.io API: ${KYA_BASE_URL}`)
+  printStep(`Limiq.io API: ${LIMIQ_BASE_URL}`)
   printStep(`Target API: ${TARGET_BASE_URL}`)
 
-  const workspace = await postKya(
+  const workspace = await postLimiq(
     "/workspaces",
     {
       name: `Purchase Demo ${randomSuffix()}`,
@@ -90,11 +92,16 @@ async function run() {
     },
   )
   const workspaceId = workspace.id
+  const workspaceKey = workspace.api_key
+  const workspaceHeaders = {
+    "X-Workspace-Id": workspaceId,
+    "X-Workspace-Key": workspaceKey,
+  }
   printSuccess(`workspace created: ${workspaceId}`)
 
   const keys = generateKeys()
 
-  const agent = await postKya(
+  const agent = await postLimiq(
     "/agents",
     {
       workspace_id: workspaceId,
@@ -105,14 +112,11 @@ async function run() {
         integration: "purchase-target",
       },
     },
-    {
-      "X-Workspace-Id": workspaceId,
-      "X-Actor-Id": "purchase-demo",
-    },
+    workspaceHeaders,
   )
   printSuccess(`agent created: ${agent.id}`)
 
-  const policy = await postKya(
+  const policy = await postLimiq(
     "/policies",
     {
       workspace_id: workspaceId,
@@ -124,27 +128,21 @@ async function run() {
         spend: { max_per_tx: DEMO_POLICY_MAX_SPEND },
       },
     },
-    {
-      "X-Workspace-Id": workspaceId,
-      "X-Actor-Id": "purchase-demo",
-    },
+    workspaceHeaders,
   )
   printSuccess(`policy created: ${policy.id}`)
 
-  const binding = await postKya(
+  const binding = await postLimiq(
     `/agents/${agent.id}/bind_policy`,
     {
       workspace_id: workspaceId,
       policy_id: policy.id,
     },
-    {
-      "X-Workspace-Id": workspaceId,
-      "X-Actor-Id": "purchase-demo",
-    },
+    workspaceHeaders,
   )
   printSuccess(`policy bound: ${binding.id}`)
 
-  const capability = await postKya(
+  const capability = await postLimiq(
     "/capabilities/request",
     {
       workspace_id: workspaceId,
@@ -155,10 +153,7 @@ async function run() {
       requested_limits: { amount: DEMO_POLICY_MAX_SPEND },
       ttl_minutes: 15,
     },
-    {
-      "X-Workspace-Id": workspaceId,
-      "X-Actor-Id": "purchase-demo",
-    },
+    workspaceHeaders,
   )
   printSuccess("capability issued")
 
@@ -181,7 +176,7 @@ async function run() {
       request_context: { source: "agent-demo", scenario: "ALLOW" },
     })
 
-    const allowResp = await postTargetPurchase(allowRequest)
+    const allowResp = await postTargetPurchase(allowRequest, workspaceKey)
     if (allowResp.status !== 200 || allowResp.data?.executed !== true) {
       throw new Error(`ALLOW scenario failed: status=${allowResp.status} body=${JSON.stringify(allowResp.data)}`)
     }
@@ -209,7 +204,7 @@ async function run() {
       request_context: { source: "agent-demo", scenario: "DENY" },
     })
 
-    const denyResp = await postTargetPurchase(denyRequest)
+    const denyResp = await postTargetPurchase(denyRequest, workspaceKey)
     if (denyResp.status !== 403) {
       throw new Error(`DENY scenario failed: expected 403, got ${denyResp.status} body=${JSON.stringify(denyResp.data)}`)
     }

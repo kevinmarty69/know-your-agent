@@ -22,6 +22,7 @@ def test_sync_client_verify_action() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/verify"
         assert request.headers["X-Workspace-Id"] == "workspace-1"
+        assert request.headers["X-Workspace-Key"] == "workspace-key-1"
         return httpx.Response(
             status_code=200,
             json={
@@ -34,6 +35,7 @@ def test_sync_client_verify_action() -> None:
     sdk = LimiqClient(
         base_url="http://example.test",
         workspace_id="workspace-1",
+        workspace_key="workspace-key-1",
         transport=httpx.MockTransport(handler),
     )
 
@@ -45,6 +47,7 @@ def test_async_client_verify_action() -> None:
     def handler(request: httpx.Request) -> httpx.Response:
         assert request.url.path == "/verify"
         assert request.headers["X-Workspace-Id"] == "workspace-1"
+        assert request.headers["X-Workspace-Key"] == "workspace-key-1"
         return httpx.Response(
             status_code=200,
             json={
@@ -57,6 +60,7 @@ def test_async_client_verify_action() -> None:
     sdk = AsyncLimiqClient(
         base_url="http://example.test",
         workspace_id="workspace-1",
+        workspace_key="workspace-key-1",
         transport=httpx.MockTransport(handler),
     )
 

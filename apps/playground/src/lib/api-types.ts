@@ -703,6 +703,30 @@ export interface components {
              */
             slug?: string | null;
         };
+        /** WorkspaceCreatedResponse */
+        WorkspaceCreatedResponse: {
+            /**
+             * Id
+             * Format: uuid
+             */
+            id: string;
+            /** Name */
+            name: string;
+            /** Slug */
+            slug: string;
+            /** Status */
+            status: string;
+            /**
+             * Created At
+             * Format: date-time
+             */
+            created_at: string;
+            /**
+             * Api Key
+             * @description Workspace API key. Returned once during bootstrap.
+             */
+            api_key: string;
+        };
         /** WorkspaceResponse */
         WorkspaceResponse: {
             /**
@@ -772,7 +796,7 @@ export interface operations {
                     [name: string]: unknown;
                 };
                 content: {
-                    "application/json": components["schemas"]["WorkspaceResponse"];
+                    "application/json": components["schemas"]["WorkspaceCreatedResponse"];
                 };
             };
             /** @description Missing or invalid authentication headers. */
@@ -784,8 +808,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -853,7 +877,7 @@ export interface operations {
                      * @example {
                      *       "detail": {
                      *         "code": "WORKSPACE_BOOTSTRAP_DISABLED",
-                     *         "message": "Workspace bootstrap is disabled; configure KYA_WORKSPACE_BOOTSTRAP_TOKEN"
+                     *         "message": "Workspace bootstrap is disabled; configure LIMIQ_WORKSPACE_BOOTSTRAP_TOKEN"
                      *       }
                      *     }
                      */
@@ -891,8 +915,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -983,8 +1007,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1073,8 +1097,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1167,8 +1191,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1276,8 +1300,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1370,8 +1394,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1479,8 +1503,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1588,8 +1612,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1676,8 +1700,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1760,8 +1784,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1844,8 +1868,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */
@@ -1922,8 +1946,8 @@ export interface operations {
                     /**
                      * @example {
                      *       "detail": {
-                     *         "code": "AUTH_WORKSPACE_MISSING",
-                     *         "message": "Missing X-Workspace-Id header"
+                     *         "code": "AUTH_WORKSPACE_KEY_MISSING",
+                     *         "message": "Missing X-Workspace-Key header"
                      *       }
                      *     }
                      */

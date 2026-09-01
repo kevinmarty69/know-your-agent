@@ -3,11 +3,11 @@
   "info": {
     "title": "Limiq.io API",
     "summary": "Identity & Permission Layer for Autonomous Agents",
-    "description": "\n## Limiq.io API\n\nIdentity & permission layer for autonomous agents.\n\n### Auth model (MVP)\nSensitive routes require `X-Workspace-Id` header. The request `workspace_id` must\nmatch this header, otherwise the API returns `WORKSPACE_MISMATCH`.\n\n`POST /workspaces` is a bootstrap route protected by `X-Bootstrap-Token`.\n\n### Error format\nBusiness errors are returned as:\n\n```json\n{\"detail\": {\"code\": \"SOME_CODE\", \"message\": \"Human readable message\"}}\n```\n\n### Main flow\n1. Create agent\n2. Create policy\n3. Bind policy to agent\n4. Request capability\n5. Verify signed action\n6. Query/export audit logs\n7. Check audit chain integrity\n",
-    "termsOfService": "https://github.com/qurveai/know-your-agent",
+    "description": "\n## Limiq.io API\n\nIdentity & permission layer for autonomous agents.\n\n### Auth model (MVP)\nSensitive routes require `X-Workspace-Id` and `X-Workspace-Key`. The key is returned\nonce by workspace bootstrap and is verified in constant time. The request\n`workspace_id` must match the authenticated workspace.\n\n`POST /workspaces` is a bootstrap route protected by `X-Bootstrap-Token`.\n\n### Error format\nBusiness errors are returned as:\n\n```json\n{\"detail\": {\"code\": \"SOME_CODE\", \"message\": \"Human readable message\"}}\n```\n\n### Main flow\n1. Create agent\n2. Create policy\n3. Bind policy to agent\n4. Request capability\n5. Verify signed action\n6. Query/export audit logs\n7. Check audit chain integrity\n",
+    "termsOfService": "https://github.com/qurveai/limiq.io",
     "contact": {
       "name": "Limiq.io Maintainers",
-      "url": "https://github.com/qurveai/know-your-agent"
+      "url": "https://github.com/qurveai/limiq.io"
     },
     "license": {
       "name": "Apache-2.0"
@@ -75,7 +75,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/WorkspaceResponse"
+                  "$ref": "#/components/schemas/WorkspaceCreatedResponse"
                 }
               }
             }
@@ -86,8 +86,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -139,7 +139,7 @@
                 "example": {
                   "detail": {
                     "code": "WORKSPACE_BOOTSTRAP_DISABLED",
-                    "message": "Workspace bootstrap is disabled; configure KYA_WORKSPACE_BOOTSTRAP_TOKEN"
+                    "message": "Workspace bootstrap is disabled; configure LIMIQ_WORKSPACE_BOOTSTRAP_TOKEN"
                   }
                 }
               }
@@ -198,8 +198,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -282,8 +282,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -384,8 +384,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -488,8 +488,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -585,8 +585,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -697,8 +697,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -794,8 +794,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -899,8 +899,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -1114,8 +1114,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -1298,8 +1298,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -1476,8 +1476,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -1597,8 +1597,8 @@
               "application/json": {
                 "example": {
                   "detail": {
-                    "code": "AUTH_WORKSPACE_MISSING",
-                    "message": "Missing X-Workspace-Id header"
+                    "code": "AUTH_WORKSPACE_KEY_MISSING",
+                    "message": "Missing X-Workspace-Key header"
                   }
                 }
               }
@@ -2419,6 +2419,47 @@
         ],
         "title": "WorkspaceCreateRequest"
       },
+      "WorkspaceCreatedResponse": {
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Id"
+          },
+          "name": {
+            "type": "string",
+            "title": "Name"
+          },
+          "slug": {
+            "type": "string",
+            "title": "Slug"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Created At"
+          },
+          "api_key": {
+            "type": "string",
+            "title": "Api Key",
+            "description": "Workspace API key. Returned once during bootstrap."
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "name",
+          "slug",
+          "status",
+          "created_at",
+          "api_key"
+        ],
+        "title": "WorkspaceCreatedResponse"
+      },
       "WorkspaceResponse": {
         "properties": {
           "id": {
@@ -2459,7 +2500,7 @@
       "APIKeyHeader": {
         "type": "apiKey",
         "in": "header",
-        "name": "X-Actor-Id"
+        "name": "X-Workspace-Key"
       }
     }
   },
@@ -2495,6 +2536,6 @@
   ],
   "externalDocs": {
     "description": "Project documentation",
-    "url": "https://github.com/qurveai/know-your-agent"
+    "url": "https://github.com/qurveai/limiq.io"
   }
 }

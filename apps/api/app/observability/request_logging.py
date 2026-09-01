@@ -4,7 +4,7 @@ from time import perf_counter
 from fastapi import Request, Response
 from starlette.middleware.base import RequestResponseEndpoint
 
-logger = logging.getLogger("kya.http")
+logger = logging.getLogger("limiq.http")
 
 
 async def request_logging_middleware(

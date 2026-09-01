@@ -197,8 +197,8 @@ def test_audit_integrity_workspace_mismatch_denied(client: TestClient, workspace
         headers={"X-Workspace-Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"},
     )
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "WORKSPACE_MISMATCH"
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "AUTH_WORKSPACE_KEY_INVALID"
 
 
 def test_audit_integrity_partial_when_event_hash_missing(

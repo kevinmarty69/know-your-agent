@@ -4,7 +4,7 @@ import logging
 from nacl.exceptions import BadSignatureError
 from nacl.signing import VerifyKey
 
-logger = logging.getLogger("kya.ed25519")
+logger = logging.getLogger("limiq.ed25519")
 
 
 def verify_ed25519_signature(

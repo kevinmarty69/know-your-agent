@@ -349,6 +349,7 @@ def test_verify_deny_policy_not_bound(
         "workspace_id": workspace_id,
         "scopes": ["purchase"],
         "limits": {"amount": 20},
+        "target_service": "stripe_proxy",
         "policy_id": workspace_id,
         "policy_version": 1,
         "iat": int(datetime.now(tz=UTC).timestamp()),
@@ -401,13 +402,17 @@ def test_verify_deny_policy_not_bound(
     assert response.json()["reason_code"] == "POLICY_NOT_BOUND"
 
 
-def test_verify_deny_spend_limit_exceeded(client: TestClient, workspace_id: str) -> None:
+def test_verify_deny_capability_spend_limit_exceeded(client: TestClient, workspace_id: str) -> None:
     public_key_b64, signing_key = _generate_agent_keypair()
     agent_id = _create_agent(client, workspace_id, public_key_b64)
-    _create_policy_and_bind(client, workspace_id, agent_id, max_per_tx=20)
+    _create_policy_and_bind(client, workspace_id, agent_id, max_per_tx=50)
     issued = _issue_capability(client, workspace_id, agent_id, ["purchase"])
 
-    payload = {"amount": 40, "currency": "EUR", "tool": "purchase"}
+    payload: dict[str, object] = {
+        "amount": "20.01",
+        "currency": "EUR",
+        "tool": "purchase",
+    }
     signature = _sign_request(
         signing_key=signing_key,
         workspace_id=workspace_id,
@@ -435,6 +440,94 @@ def test_verify_deny_spend_limit_exceeded(client: TestClient, workspace_id: str)
     assert response.status_code == 200
     assert response.json()["decision"] == "DENY"
     assert response.json()["reason_code"] == "SPEND_LIMIT_EXCEEDED"
+
+
+def test_verify_deny_target_service_mismatch(client: TestClient, workspace_id: str) -> None:
+    public_key_b64, signing_key = _generate_agent_keypair()
+    agent_id = _create_agent(client, workspace_id, public_key_b64)
+    _create_policy_and_bind(client, workspace_id, agent_id)
+    issued = _issue_capability(client, workspace_id, agent_id, ["purchase"])
+    payload = {"amount": 18, "currency": "EUR", "tool": "purchase"}
+    signature = _sign_request(
+        signing_key=signing_key,
+        workspace_id=workspace_id,
+        agent_id=agent_id,
+        action_type="purchase",
+        target_service="other_service",
+        payload=payload,
+        capability_jti=str(issued["jti"]),
+    )
+
+    response = client.post(
+        "/verify",
+        json={
+            "workspace_id": workspace_id,
+            "agent_id": agent_id,
+            "action_type": "purchase",
+            "target_service": "other_service",
+            "payload": payload,
+            "signature": signature,
+            "capability_token": issued["token"],
+        },
+        headers=_auth_headers(workspace_id),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["decision"] == "DENY"
+    assert response.json()["reason_code"] == "CAPABILITY_TARGET_MISMATCH"
+
+
+def test_verify_deny_capability_from_replaced_policy(client: TestClient, workspace_id: str) -> None:
+    public_key_b64, signing_key = _generate_agent_keypair()
+    agent_id = _create_agent(client, workspace_id, public_key_b64)
+    _create_policy_and_bind(client, workspace_id, agent_id)
+    issued = _issue_capability(client, workspace_id, agent_id, ["purchase"])
+
+    policy = client.post(
+        "/policies",
+        json={
+            "workspace_id": workspace_id,
+            "name": "purchase_verify",
+            "version": 2,
+            "schema_version": 1,
+            "policy_json": {
+                "allowed_tools": ["purchase"],
+                "spend": {"currency": "EUR", "max_per_tx": 50},
+            },
+        },
+    )
+    bind = client.post(
+        f"/agents/{agent_id}/bind_policy",
+        json={"workspace_id": workspace_id, "policy_id": policy.json()["id"]},
+    )
+    assert bind.status_code == 201
+
+    payload = {"amount": 18, "currency": "EUR", "tool": "purchase"}
+    signature = _sign_request(
+        signing_key=signing_key,
+        workspace_id=workspace_id,
+        agent_id=agent_id,
+        action_type="purchase",
+        target_service="stripe_proxy",
+        payload=payload,
+        capability_jti=str(issued["jti"]),
+    )
+    response = client.post(
+        "/verify",
+        json={
+            "workspace_id": workspace_id,
+            "agent_id": agent_id,
+            "action_type": "purchase",
+            "target_service": "stripe_proxy",
+            "payload": payload,
+            "signature": signature,
+            "capability_token": issued["token"],
+        },
+    )
+
+    assert response.status_code == 200
+    assert response.json()["decision"] == "DENY"
+    assert response.json()["reason_code"] == "CAPABILITY_POLICY_MISMATCH"
 
 
 def test_verify_deny_rate_limit_exceeded(client: TestClient, workspace_id: str) -> None:
@@ -563,8 +656,8 @@ def test_verify_workspace_mismatch_denied(client: TestClient, workspace_id: str)
         headers={"X-Workspace-Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"},
     )
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "WORKSPACE_MISMATCH"
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "AUTH_WORKSPACE_KEY_INVALID"
 
 
 def test_verify_deny_capability_invalid_on_unexpected_decode_error(

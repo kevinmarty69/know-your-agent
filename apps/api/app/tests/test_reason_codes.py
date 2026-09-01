@@ -10,6 +10,8 @@ def test_reason_codes_are_stable() -> None:
         "CAPABILITY_EXPIRED",
         "CAPABILITY_REVOKED",
         "CAPABILITY_SCOPE_MISMATCH",
+        "CAPABILITY_TARGET_MISMATCH",
+        "CAPABILITY_POLICY_MISMATCH",
         "SIGNATURE_INVALID",
         "SPEND_LIMIT_EXCEEDED",
         "RATE_LIMIT_EXCEEDED",

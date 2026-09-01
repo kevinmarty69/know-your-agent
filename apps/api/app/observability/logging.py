@@ -52,7 +52,7 @@ def configure_logging() -> None:
     level_name = settings.log_level.upper()
     level = getattr(logging, level_name, None)
     if not isinstance(level, int):
-        logging.getLogger("kya.logging").warning(
+        logging.getLogger("limiq.logging").warning(
             "invalid_log_level_fallback",
             extra={
                 "event_name": "invalid_log_level_fallback",

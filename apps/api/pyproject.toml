@@ -8,6 +8,7 @@ select = ["E", "F", "I", "B", "UP"]
 [tool.pytest.ini_options]
 pythonpath = ["."]
 testpaths = ["app/tests"]
+markers = ["unit: isolated test that does not require PostgreSQL or Redis"]
 
 [tool.mypy]
 python_version = "3.12"

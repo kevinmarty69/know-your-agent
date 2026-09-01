@@ -188,5 +188,5 @@ def test_e2e_reference_flow(client: TestClient, workspace_id: str) -> None:
 
     metrics = client.get("/metrics")
     assert metrics.status_code == 200
-    assert "kya_verify_total" in metrics.text
-    assert "kya_audit_integrity_total" in metrics.text
+    assert "limiq_verify_total" in metrics.text
+    assert "limiq_audit_integrity_total" in metrics.text

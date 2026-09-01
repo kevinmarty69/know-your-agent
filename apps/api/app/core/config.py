@@ -10,9 +10,9 @@ class Settings(BaseSettings):
     app_env: str = "development"
     app_port: int = 8000
 
-    postgres_user: str = "kya"
-    postgres_password: str = "kya"
-    postgres_db: str = "kya"
+    postgres_user: str = "limiq"
+    postgres_password: str = "limiq"
+    postgres_db: str = "limiq"
     postgres_host: str = "localhost"
     postgres_port: int = 5432
 
@@ -20,10 +20,11 @@ class Settings(BaseSettings):
     redis_port: int = 6379
     redis_db: int = 0
 
-    kya_jwt_private_key_pem: str | None = None
-    kya_jwt_public_key_pem: str | None = None
-    kya_jwt_kid: str | None = None
-    kya_workspace_bootstrap_token: str | None = None
+    limiq_jwt_private_key_pem: str | None = None
+    limiq_jwt_public_key_pem: str | None = None
+    limiq_jwt_kid: str | None = None
+    limiq_workspace_bootstrap_token: str | None = None
+    limiq_workspace_auth_secret: str | None = None
 
     jwt_leeway_seconds: int = 5
     capability_default_ttl_minutes: int = 15

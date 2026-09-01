@@ -41,8 +41,9 @@ API_DESCRIPTION = """
 Identity & permission layer for autonomous agents.
 
 ### Auth model (MVP)
-Sensitive routes require `X-Workspace-Id` header. The request `workspace_id` must
-match this header, otherwise the API returns `WORKSPACE_MISMATCH`.
+Sensitive routes require `X-Workspace-Id` and `X-Workspace-Key`. The key is returned
+once by workspace bootstrap and is verified in constant time. The request
+`workspace_id` must match the authenticated workspace.
 
 `POST /workspaces` is a bootstrap route protected by `X-Bootstrap-Token`.
 
@@ -70,8 +71,8 @@ COMMON_ERROR_RESPONSES: dict[int | str, dict[str, Any]] = {
             "application/json": {
                 "example": {
                     "detail": {
-                        "code": "AUTH_WORKSPACE_MISSING",
-                        "message": "Missing X-Workspace-Id header",
+                        "code": "AUTH_WORKSPACE_KEY_MISSING",
+                        "message": "Missing X-Workspace-Key header",
                     }
                 }
             }
@@ -126,7 +127,7 @@ def install_custom_openapi(app: FastAPI) -> Callable[[], dict[str, Any]]:
 
         schema["externalDocs"] = {
             "description": "Project documentation",
-            "url": "https://github.com/qurveai/know-your-agent",
+            "url": "https://github.com/qurveai/limiq.io",
         }
         schema.setdefault("info", {})["x-logo"] = {
             "url": "https://raw.githubusercontent.com/redocly/redoc/main/demo/logo.png",

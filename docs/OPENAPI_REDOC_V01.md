@@ -17,12 +17,13 @@ Use this when API schemas change to keep playground requests/responses aligned.
 ## Authentication Header (MVP)
 Routes sensibles utilisent:
 - `X-Workspace-Id: <workspace_uuid>`
+- `X-Workspace-Key: <workspace_api_key>`
 
 La valeur `workspace_id` du body/query doit matcher ce header, sinon `WORKSPACE_MISMATCH`.
 
 Route de bootstrap workspace:
 - `POST /workspaces` utilise `X-Bootstrap-Token: <bootstrap_token>`
-- si `KYA_WORKSPACE_BOOTSTRAP_TOKEN` n'est pas configure cote serveur: `503 WORKSPACE_BOOTSTRAP_DISABLED`
+- si `LIMIQ_WORKSPACE_BOOTSTRAP_TOKEN` n'est pas configure cote serveur: `503 WORKSPACE_BOOTSTRAP_DISABLED`
 
 ## Error Contract
 Toutes les erreurs metier suivent:
@@ -48,10 +49,10 @@ Toutes les erreurs metier suivent:
 ## Workspace Endpoint Contract
 - `POST /workspaces`
   - Body: `name` (required), `slug` (optional)
-  - Success: `201` with `id,name,slug,status,created_at`
+  - Success: `201` with `id,name,slug,status,created_at,api_key` (key returned once)
   - Errors: `401 AUTH_BOOTSTRAP_MISSING|AUTH_BOOTSTRAP_INVALID`, `409 WORKSPACE_SLUG_ALREADY_EXISTS`, `503 WORKSPACE_BOOTSTRAP_DISABLED`
 - `GET /workspaces/{workspace_id}`
-  - Requires `X-Workspace-Id` equal to `{workspace_id}`
+  - Requires matching `X-Workspace-Id` and `X-Workspace-Key`
   - Errors: `403 WORKSPACE_MISMATCH`, `404 WORKSPACE_NOT_FOUND`
 
 ## Verify Decision Contract

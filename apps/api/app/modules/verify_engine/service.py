@@ -18,13 +18,14 @@ from app.modules.audit_log.service import append_audit_event
 from app.modules.revocation.service import is_jti_revoked
 from app.modules.verify_engine.canonical_json import canonical_json_bytes
 from app.modules.verify_engine.policy_eval import (
+    capability_allows_payload_spend,
     policy_allows_payload_spend,
     policy_allows_rate,
     scopes_allow_action,
 )
 from app.schemas.verify import VerifyRequest, VerifyResponse
 
-logger = logging.getLogger("kya.verify_engine")
+logger = logging.getLogger("limiq.verify_engine")
 
 
 def _decision(
@@ -135,6 +136,7 @@ def verify_action(db: Session, payload: VerifyRequest) -> VerifyResponse:
     token_agent_id = str(claims.get("sub", ""))
     token_workspace_id = str(claims.get("workspace_id", ""))
     jti = str(claims.get("jti", ""))
+    token_target_service = str(claims.get("target_service", ""))
 
     if token_agent_id != str(payload.agent_id) or token_workspace_id != str(payload.workspace_id):
         return _decision(
@@ -144,6 +146,16 @@ def verify_action(db: Session, payload: VerifyRequest) -> VerifyResponse:
             reason_code=ReasonCode.WORKSPACE_MISMATCH,
             agent_id=payload.agent_id,
             event_data={"reason": ReasonCode.WORKSPACE_MISMATCH},
+        )
+
+    if token_target_service != payload.target_service:
+        return _decision(
+            db,
+            workspace_id=payload.workspace_id,
+            decision="DENY",
+            reason_code=ReasonCode.CAPABILITY_TARGET_MISMATCH,
+            agent_id=payload.agent_id,
+            event_data={"reason": ReasonCode.CAPABILITY_TARGET_MISMATCH, "jti": jti},
         )
 
     if is_jti_revoked(db, jti=jti):
@@ -169,10 +181,7 @@ def verify_action(db: Session, payload: VerifyRequest) -> VerifyResponse:
 
     scopes_raw = claims.get("scopes", [])
     scopes = [str(scope) for scope in scopes_raw] if isinstance(scopes_raw, list) else []
-    tool = payload.payload.get("tool")
-    tool_str = str(tool) if tool is not None else None
-
-    if not scopes_allow_action(scopes=scopes, action_type=payload.action_type, tool=tool_str):
+    if not scopes_allow_action(scopes=scopes, action_type=payload.action_type):
         return _decision(
             db,
             workspace_id=payload.workspace_id,
@@ -180,6 +189,18 @@ def verify_action(db: Session, payload: VerifyRequest) -> VerifyResponse:
             reason_code=ReasonCode.CAPABILITY_SCOPE_MISMATCH,
             agent_id=payload.agent_id,
             event_data={"reason": ReasonCode.CAPABILITY_SCOPE_MISMATCH, "jti": jti},
+        )
+
+    limits_raw = claims.get("limits", {})
+    limits = limits_raw if isinstance(limits_raw, dict) else {}
+    if not capability_allows_payload_spend(limits=limits, payload=payload.payload):
+        return _decision(
+            db,
+            workspace_id=payload.workspace_id,
+            decision="DENY",
+            reason_code=ReasonCode.SPEND_LIMIT_EXCEEDED,
+            agent_id=payload.agent_id,
+            event_data={"reason": ReasonCode.SPEND_LIMIT_EXCEEDED, "jti": jti},
         )
 
     signed_envelope: dict[str, object] = {
@@ -239,6 +260,18 @@ def verify_action(db: Session, payload: VerifyRequest) -> VerifyResponse:
             reason_code=ReasonCode.POLICY_NOT_BOUND,
             agent_id=payload.agent_id,
             event_data={"reason": ReasonCode.POLICY_NOT_BOUND},
+        )
+
+    token_policy_id = str(claims.get("policy_id", ""))
+    token_policy_version = claims.get("policy_version")
+    if token_policy_id != str(policy.id) or token_policy_version != policy.version:
+        return _decision(
+            db,
+            workspace_id=payload.workspace_id,
+            decision="DENY",
+            reason_code=ReasonCode.CAPABILITY_POLICY_MISMATCH,
+            agent_id=payload.agent_id,
+            event_data={"reason": ReasonCode.CAPABILITY_POLICY_MISMATCH, "jti": jti},
         )
 
     if not policy_allows_payload_spend(policy_json=policy.policy_json, payload=payload.payload):

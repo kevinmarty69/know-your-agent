@@ -96,6 +96,7 @@ def issue_capability(db: Session, payload: CapabilityRequest) -> CapabilityIssue
         workspace_id=payload.workspace_id,
         scopes=payload.requested_scopes,
         limits=payload.requested_limits,
+        target_service=payload.target_service,
         policy_id=policy.id,
         policy_version=policy.version,
         jti=jti,

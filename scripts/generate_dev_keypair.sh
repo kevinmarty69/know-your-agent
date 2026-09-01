@@ -18,5 +18,5 @@ echo
 echo "Copy these values into apps/api/.env:"
 PRIVATE_ESCAPED=$(awk '{printf "%s\\n", $0}' "$PRIVATE_PEM")
 PUBLIC_ESCAPED=$(awk '{printf "%s\\n", $0}' "$PUBLIC_PEM")
-printf 'KYA_JWT_PRIVATE_KEY_PEM="%s"\n' "$PRIVATE_ESCAPED"
-printf 'KYA_JWT_PUBLIC_KEY_PEM="%s"\n' "$PUBLIC_ESCAPED"
+printf 'LIMIQ_JWT_PRIVATE_KEY_PEM="%s"\n' "$PRIVATE_ESCAPED"
+printf 'LIMIQ_JWT_PUBLIC_KEY_PEM="%s"\n' "$PUBLIC_ESCAPED"

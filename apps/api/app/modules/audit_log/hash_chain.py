@@ -1,3 +1,4 @@
+from datetime import UTC, datetime
 from hashlib import sha256
 from typing import Any
 from uuid import UUID
@@ -10,7 +11,7 @@ def compute_audit_event_hash(
     *,
     event_id: UUID,
     workspace_id: UUID,
-    event_time: str,
+    event_time: datetime,
     event_type: str,
     actor_type: str,
     actor_id: UUID | None,
@@ -23,7 +24,7 @@ def compute_audit_event_hash(
     payload: dict[str, Any] = {
         "id": str(event_id),
         "workspace_id": str(workspace_id),
-        "event_time": event_time,
+        "event_time": event_time.astimezone(UTC).isoformat(),
         "event_type": event_type,
         "actor_type": actor_type,
         "actor_id": str(actor_id) if actor_id else None,
@@ -41,7 +42,7 @@ def recompute_event_hash(event: AuditEvent) -> str:
     return compute_audit_event_hash(
         event_id=event.id,
         workspace_id=event.workspace_id,
-        event_time=event.event_time.isoformat(),
+        event_time=event.event_time,
         event_type=event.event_type,
         actor_type=event.actor_type,
         actor_id=event.actor_id,

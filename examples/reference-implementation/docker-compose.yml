@@ -2,11 +2,11 @@ services:
   postgres:
     image: postgres:16
     environment:
-      POSTGRES_USER: kya
-      POSTGRES_PASSWORD: kya
-      POSTGRES_DB: kya
+      POSTGRES_USER: limiq
+      POSTGRES_PASSWORD: limiq
+      POSTGRES_DB: limiq
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U kya"]
+      test: ["CMD-SHELL", "pg_isready -U limiq"]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -26,23 +26,24 @@ services:
     environment:
       APP_ENV: development
       APP_PORT: 8000
-      POSTGRES_USER: kya
-      POSTGRES_PASSWORD: kya
-      POSTGRES_DB: kya
+      POSTGRES_USER: limiq
+      POSTGRES_PASSWORD: limiq
+      POSTGRES_DB: limiq
       POSTGRES_HOST: postgres
       POSTGRES_PORT: 5432
       REDIS_HOST: redis
       REDIS_PORT: 6379
       REDIS_DB: 0
-      KYA_JWT_KID: demo-ed25519-key-1
-      KYA_WORKSPACE_BOOTSTRAP_TOKEN: dev-bootstrap-token
+      LIMIQ_JWT_KID: demo-ed25519-key-1
+      LIMIQ_WORKSPACE_BOOTSTRAP_TOKEN: dev-bootstrap-token
+      LIMIQ_WORKSPACE_AUTH_SECRET: reference-workspace-auth-secret-32-bytes
       CORS_ALLOW_ORIGINS: http://localhost:5173,http://127.0.0.1:5173
     command: >
       sh -lc '
-        openssl genpkey -algorithm ed25519 -out /tmp/kya-private.pem >/dev/null 2>&1;
-        openssl pkey -in /tmp/kya-private.pem -pubout -out /tmp/kya-public.pem >/dev/null 2>&1;
-        export KYA_JWT_PRIVATE_KEY_PEM="$(cat /tmp/kya-private.pem)";
-        export KYA_JWT_PUBLIC_KEY_PEM="$(cat /tmp/kya-public.pem)";
+        openssl genpkey -algorithm ed25519 -out /tmp/limiq-private.pem >/dev/null 2>&1;
+        openssl pkey -in /tmp/limiq-private.pem -pubout -out /tmp/limiq-public.pem >/dev/null 2>&1;
+        export LIMIQ_JWT_PRIVATE_KEY_PEM="$(cat /tmp/limiq-private.pem)";
+        export LIMIQ_JWT_PUBLIC_KEY_PEM="$(cat /tmp/limiq-public.pem)";
         cd /app/apps/api;
         alembic upgrade head;
         uvicorn app.main:app --host 0.0.0.0 --port 8000
@@ -66,7 +67,7 @@ services:
       dockerfile: examples/reference-implementation/purchase.Dockerfile
     environment:
       PORT: 3002
-      KYA_BASE_URL: http://api:8000
+      LIMIQ_BASE_URL: http://api:8000
     command: ["npm", "run", "dev"]
     working_dir: /app/examples/purchase-target
     ports:
@@ -85,9 +86,9 @@ services:
       context: ../..
       dockerfile: examples/reference-implementation/purchase.Dockerfile
     environment:
-      KYA_BASE_URL: http://api:8000
+      LIMIQ_BASE_URL: http://api:8000
       TARGET_BASE_URL: http://purchase-target:3002
-      KYA_BOOTSTRAP_TOKEN: dev-bootstrap-token
+      LIMIQ_BOOTSTRAP_TOKEN: dev-bootstrap-token
       DEMO_POLICY_MAX_SPEND: 100
       DEMO_ALLOW_AMOUNT: 49
       DEMO_DENY_AMOUNT: 149
@@ -98,4 +99,3 @@ services:
         condition: service_healthy
       purchase-target:
         condition: service_healthy
-

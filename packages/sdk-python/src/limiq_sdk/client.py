@@ -12,11 +12,13 @@ class LimiqClient:
         *,
         base_url: str,
         workspace_id: str,
+        workspace_key: str,
         timeout: float = 10.0,
         transport: httpx.BaseTransport | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._workspace_id = workspace_id
+        self._workspace_key = workspace_key
         self._timeout = timeout
         self._transport = transport
 
@@ -24,7 +26,10 @@ class LimiqClient:
         with httpx.Client(timeout=self._timeout, transport=self._transport) as client:
             response = client.post(
                 f"{self._base_url}/capabilities/request",
-                headers={"X-Workspace-Id": self._workspace_id},
+                headers={
+                    "X-Workspace-Id": self._workspace_id,
+                    "X-Workspace-Key": self._workspace_key,
+                },
                 json=payload,
             )
             response.raise_for_status()
@@ -34,7 +39,10 @@ class LimiqClient:
         with httpx.Client(timeout=self._timeout, transport=self._transport) as client:
             response = client.post(
                 f"{self._base_url}/verify",
-                headers={"X-Workspace-Id": self._workspace_id},
+                headers={
+                    "X-Workspace-Id": self._workspace_id,
+                    "X-Workspace-Key": self._workspace_key,
+                },
                 json=payload,
             )
             response.raise_for_status()
@@ -47,11 +55,13 @@ class AsyncLimiqClient:
         *,
         base_url: str,
         workspace_id: str,
+        workspace_key: str,
         timeout: float = 10.0,
         transport: httpx.AsyncBaseTransport | None = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._workspace_id = workspace_id
+        self._workspace_key = workspace_key
         self._timeout = timeout
         self._transport = transport
 
@@ -59,7 +69,10 @@ class AsyncLimiqClient:
         async with httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client:
             response = await client.post(
                 f"{self._base_url}/capabilities/request",
-                headers={"X-Workspace-Id": self._workspace_id},
+                headers={
+                    "X-Workspace-Id": self._workspace_id,
+                    "X-Workspace-Key": self._workspace_key,
+                },
                 json=payload,
             )
             response.raise_for_status()
@@ -69,7 +82,10 @@ class AsyncLimiqClient:
         async with httpx.AsyncClient(timeout=self._timeout, transport=self._transport) as client:
             response = await client.post(
                 f"{self._base_url}/verify",
-                headers={"X-Workspace-Id": self._workspace_id},
+                headers={
+                    "X-Workspace-Id": self._workspace_id,
+                    "X-Workspace-Key": self._workspace_key,
+                },
                 json=payload,
             )
             response.raise_for_status()

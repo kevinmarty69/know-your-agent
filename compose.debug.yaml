@@ -1,6 +1,0 @@
-services:
-  knowyouragent:
-    image: knowyouragent
-    build:
-      context: .
-      dockerfile: ./Dockerfile

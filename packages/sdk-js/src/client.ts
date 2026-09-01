@@ -12,11 +12,12 @@ function normalizeBaseUrl(baseUrl: string): string {
   return baseUrl.replace(/\/$/, "")
 }
 
-function buildHeaders(workspaceId: string): Record<string, string> {
+function buildHeaders(workspaceId: string, workspaceKey: string): Record<string, string> {
   return {
     "Content-Type": "application/json",
     Accept: "application/json",
     "X-Workspace-Id": workspaceId,
+    "X-Workspace-Key": workspaceKey,
   }
 }
 
@@ -41,18 +42,20 @@ async function parseJsonResponse<T>(response: Response): Promise<T> {
 export class LimiqClient {
   private readonly baseUrl: string
   private readonly workspaceId: string
+  private readonly workspaceKey: string
   private readonly fetchImpl: typeof fetch
 
   constructor(options: LimiqClientOptions) {
     this.baseUrl = normalizeBaseUrl(options.baseUrl)
     this.workspaceId = options.workspaceId
+    this.workspaceKey = options.workspaceKey
     this.fetchImpl = options.fetchImpl ?? fetch
   }
 
   async requestCapability(input: RequestCapabilityInput): Promise<RequestCapabilityResponse> {
     const response = await this.fetchImpl(`${this.baseUrl}/capabilities/request`, {
       method: "POST",
-      headers: buildHeaders(this.workspaceId),
+      headers: buildHeaders(this.workspaceId, this.workspaceKey),
       body: JSON.stringify({
         workspace_id: this.workspaceId,
         ...input,
@@ -65,7 +68,7 @@ export class LimiqClient {
   async verifyAction(payload: VerifyRequestBody): Promise<VerifyResponse> {
     const response = await this.fetchImpl(`${this.baseUrl}/verify`, {
       method: "POST",
-      headers: buildHeaders(this.workspaceId),
+      headers: buildHeaders(this.workspaceId, this.workspaceKey),
       body: JSON.stringify(payload),
     })
 

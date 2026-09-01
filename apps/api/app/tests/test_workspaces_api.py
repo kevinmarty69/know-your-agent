@@ -1,10 +1,11 @@
-from uuid import uuid4
+from uuid import UUID, uuid4
 
 import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
+from app.core.auth import create_workspace_key
 from app.core.config import settings
 from app.main import app
 from app.models.audit_event import AuditEvent
@@ -28,6 +29,7 @@ def test_create_workspace_success() -> None:
     assert payload["name"] == "Acme Sandbox"
     assert payload["slug"] == "acme-sandbox"
     assert payload["status"] == "active"
+    assert payload["api_key"].startswith("limiq_ws_")
 
 
 def test_create_workspace_slug_auto_derived() -> None:
@@ -88,7 +90,7 @@ def test_create_workspace_bootstrap_not_configured_service_unavailable(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     client = TestClient(app)
-    monkeypatch.setattr(settings, "kya_workspace_bootstrap_token", None)
+    monkeypatch.setattr(settings, "limiq_workspace_bootstrap_token", None)
 
     response = client.post(
         "/workspaces",
@@ -107,19 +109,42 @@ def test_get_workspace_success(client: TestClient, workspace_id: str) -> None:
     assert response.json()["id"] == workspace_id
 
 
+def test_get_workspace_requires_matching_api_key(workspace_id: str) -> None:
+    missing = TestClient(app, headers={"X-Workspace-Id": workspace_id})
+    wrong_workspace = uuid4()
+    wrong = TestClient(
+        app,
+        headers={
+            "X-Workspace-Id": workspace_id,
+            "X-Workspace-Key": create_workspace_key(wrong_workspace),
+        },
+    )
+
+    assert missing.get(f"/workspaces/{workspace_id}").status_code == 401
+    response = wrong.get(f"/workspaces/{workspace_id}")
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "AUTH_WORKSPACE_KEY_INVALID"
+
+
 def test_get_workspace_workspace_mismatch_denied(client: TestClient, workspace_id: str) -> None:
     response = client.get(
         f"/workspaces/{workspace_id}",
         headers={"X-Workspace-Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"},
     )
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "WORKSPACE_MISMATCH"
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "AUTH_WORKSPACE_KEY_INVALID"
 
 
 def test_get_workspace_unknown_id_not_found() -> None:
     unknown = str(uuid4())
-    client = TestClient(app, headers={"X-Workspace-Id": unknown})
+    client = TestClient(
+        app,
+        headers={
+            "X-Workspace-Id": unknown,
+            "X-Workspace-Key": create_workspace_key(UUID(unknown)),
+        },
+    )
 
     response = client.get(f"/workspaces/{unknown}")
 

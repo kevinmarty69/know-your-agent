@@ -41,3 +41,7 @@ class WorkspaceResponse(BaseModel):
     slug: str
     status: str
     created_at: datetime
+
+
+class WorkspaceCreatedResponse(WorkspaceResponse):
+    api_key: str = Field(description="Workspace API key. Returned once during bootstrap.")

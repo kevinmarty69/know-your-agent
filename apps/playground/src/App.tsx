@@ -112,6 +112,7 @@ function App() {
     import.meta.env.VITE_BOOTSTRAP_TOKEN || "",
   )
   const [workspaceId, setWorkspaceId] = useState<string>(crypto.randomUUID())
+  const [workspaceKey, setWorkspaceKey] = useState("")
   const [workspaceName, setWorkspaceName] = useState("Playground Workspace")
   const [workspaceSlug, setWorkspaceSlug] = useState("")
   const [workspaceLookupId, setWorkspaceLookupId] = useState("")
@@ -240,6 +241,7 @@ function App() {
         title: params.title,
         baseUrl,
         workspaceId,
+        workspaceKey,
         bootstrapToken,
         method: params.method,
         path: params.path,
@@ -266,6 +268,7 @@ function App() {
         const nextWorkspaceId = String(data.id)
         setWorkspaceId(nextWorkspaceId)
         setWorkspaceLookupId(nextWorkspaceId)
+        if (typeof data.api_key === "string") setWorkspaceKey(data.api_key)
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Unknown error"
@@ -288,7 +291,7 @@ function App() {
             <Badge variant="secondary">internal tool</Badge>
           </div>
 
-          <div className="mt-5 grid gap-3 md:grid-cols-3">
+          <div className="mt-5 grid gap-3 md:grid-cols-2 lg:grid-cols-4">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
                 API Base URL
@@ -300,6 +303,16 @@ function App() {
                 X-Workspace-Id
               </label>
               <Input value={workspaceId} onChange={(e) => setWorkspaceId(e.target.value)} />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                X-Workspace-Key
+              </label>
+              <Input
+                type="password"
+                value={workspaceKey}
+                onChange={(e) => setWorkspaceKey(e.target.value)}
+              />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">

@@ -144,5 +144,5 @@ def test_bind_policy_workspace_mismatch_denied(client: TestClient, workspace_id:
         headers={"X-Workspace-Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"},
     )
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "WORKSPACE_MISMATCH"
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "AUTH_WORKSPACE_KEY_INVALID"

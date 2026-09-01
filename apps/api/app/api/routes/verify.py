@@ -16,7 +16,7 @@ from app.schemas.verify import VerifyRequest, VerifyResponse
 router = APIRouter(tags=["verify"])
 DbSession = Annotated[Session, Depends(get_db)]
 Auth = Annotated[AuthContext, Depends(get_auth_context)]
-logger = logging.getLogger("kya.verify")
+logger = logging.getLogger("limiq.verify")
 
 
 def _extract_jti_unverified(token: str) -> str | None:

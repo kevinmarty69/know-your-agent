@@ -24,10 +24,11 @@ Core responsibilities:
   - revocation cache and rate-limit counters
 
 ## Security Model (MVP)
-- workspace context from `X-Workspace-Id`
+- workspace authentication from `X-Workspace-Id` + an HMAC-derived `X-Workspace-Key`
 - request `workspace_id` must match auth context
 - Ed25519 signatures for action verification
-- JWT capability tokens (EdDSA)
+- JWT capability tokens (EdDSA), bound to agent, workspace and target service
+- exact decimal and currency checks against both capability and policy limits
 
 ## Audit Integrity
 - append-only events

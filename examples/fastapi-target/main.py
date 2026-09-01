@@ -1,5 +1,4 @@
 import os
-
 import httpx
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel, Field
@@ -17,7 +16,8 @@ class VerifyPayload(BaseModel):
 
 
 app = FastAPI(title="Limiq.io FastAPI Target Example")
-KYA_BASE_URL = os.getenv("KYA_BASE_URL", "http://localhost:8000")
+LIMIQ_BASE_URL = os.getenv("LIMIQ_BASE_URL", "http://localhost:8000")
+LIMIQ_WORKSPACE_KEY = os.getenv("LIMIQ_WORKSPACE_KEY", "")
 
 
 def _safe_json(resp: httpx.Response) -> dict[str, object]:
@@ -33,7 +33,7 @@ def _safe_json(resp: httpx.Response) -> dict[str, object]:
 
 @app.get("/health")
 async def health() -> dict[str, object]:
-    return {"ok": True, "service": "fastapi-target", "kya_base_url": KYA_BASE_URL}
+    return {"ok": True, "service": "fastapi-target", "limiq_base_url": LIMIQ_BASE_URL}
 
 
 @app.post("/purchase")
@@ -41,8 +41,11 @@ async def purchase(data: VerifyPayload) -> dict[str, object]:
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             verify_resp = await client.post(
-                f"{KYA_BASE_URL}/verify",
-                headers={"X-Workspace-Id": data.workspace_id},
+                f"{LIMIQ_BASE_URL}/verify",
+                headers={
+                    "X-Workspace-Id": data.workspace_id,
+                    "X-Workspace-Key": LIMIQ_WORKSPACE_KEY,
+                },
                 json=data.model_dump(),
             )
     except httpx.TimeoutException as exc:

@@ -73,9 +73,7 @@ def create_agent_endpoint(payload: AgentCreateRequest, auth: Auth, db: DbSession
             "description": "Agent not found.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": {"code": "AGENT_NOT_FOUND", "message": "Agent not found"}
-                    }
+                    "example": {"detail": {"code": "AGENT_NOT_FOUND", "message": "Agent not found"}}
                 }
             },
         },
@@ -111,9 +109,7 @@ def get_agent_endpoint(agent_id: UUID, auth: Auth, db: DbSession) -> AgentRespon
             "description": "Agent not found.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": {"code": "AGENT_NOT_FOUND", "message": "Agent not found"}
-                    }
+                    "example": {"detail": {"code": "AGENT_NOT_FOUND", "message": "Agent not found"}}
                 }
             },
         },

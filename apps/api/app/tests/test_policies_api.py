@@ -56,8 +56,8 @@ def test_create_policy_workspace_mismatch_denied(client: TestClient, workspace_i
         headers={"X-Workspace-Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"},
     )
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "WORKSPACE_MISMATCH"
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "AUTH_WORKSPACE_KEY_INVALID"
 
 
 def test_create_policy_rejects_unknown_top_level_field(

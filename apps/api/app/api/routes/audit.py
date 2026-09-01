@@ -33,7 +33,7 @@ AuditExportQuery = Annotated[AuditExportQueryParams, Depends(get_audit_export_qu
 AuditIntegrityQuery = Annotated[
     AuditIntegrityQueryParams, Depends(get_audit_integrity_query_params)
 ]
-logger = logging.getLogger("kya.audit")
+logger = logging.getLogger("limiq.audit")
 
 
 @router.get(
@@ -96,9 +96,7 @@ def export_audit_csv_endpoint(
     "/audit/integrity/check",
     response_model=AuditIntegrityResponse,
     summary="Check Audit Chain Integrity",
-    description=(
-        "Verifies hash-chain continuity in a workspace. Returns OK, BROKEN or PARTIAL."
-    ),
+    description=("Verifies hash-chain continuity in a workspace. Returns OK, BROKEN or PARTIAL."),
     responses=COMMON_ERROR_RESPONSES,
 )
 def check_audit_integrity_endpoint(

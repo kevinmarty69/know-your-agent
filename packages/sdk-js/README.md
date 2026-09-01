@@ -39,6 +39,7 @@ const verifyPayload = buildSignedRequest({
 const client = new LimiqClient({
   baseUrl: "http://localhost:8000",
   workspaceId: "<workspace_uuid>",
+  workspaceKey: "<workspace_api_key>",
 })
 
 const decision = await client.verifyAction(verifyPayload)

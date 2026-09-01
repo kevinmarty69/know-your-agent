@@ -6,7 +6,8 @@ const app = express()
 app.use(express.json())
 
 const port = Number(process.env.PORT || 3001)
-const kyaBaseUrl = process.env.KYA_BASE_URL || "http://localhost:8000"
+const limiqBaseUrl = process.env.LIMIQ_BASE_URL || "http://localhost:8000"
+const workspaceKey = process.env.LIMIQ_WORKSPACE_KEY || ""
 
 function requireField(body, field) {
   if (!body || typeof body !== "object" || !(field in body)) {
@@ -16,7 +17,7 @@ function requireField(body, field) {
 }
 
 app.get("/health", (_, res) => {
-  res.json({ ok: true, service: "express-target", kya_base_url: kyaBaseUrl })
+  res.json({ ok: true, service: "express-target", limiq_base_url: limiqBaseUrl })
 })
 
 app.post("/purchase", async (req, res) => {
@@ -40,8 +41,9 @@ app.post("/purchase", async (req, res) => {
 
   try {
     const client = new LimiqClient({
-      baseUrl: kyaBaseUrl,
+      baseUrl: limiqBaseUrl,
       workspaceId: body.workspace_id,
+      workspaceKey,
     })
 
     const verify = await client.verifyAction({

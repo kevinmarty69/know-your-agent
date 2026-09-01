@@ -2,6 +2,8 @@
 
 Reference integration that protects a real business action (`POST /purchase`) with Limiq.io verify.
 
+`agent-demo.js` is a trusted local setup harness: it bootstraps the workspace and forwards the resulting key to the demo target. A real target must load that key from server-side configuration or a secret store, never from an untrusted caller.
+
 ## Goal
 Show a complete ALLOW + DENY flow in a few minutes:
 1. Bootstrap workspace/agent/policy/capability via Limiq.io API.
@@ -11,7 +13,7 @@ Show a complete ALLOW + DENY flow in a few minutes:
 
 ## Prerequisites
 - Limiq.io API running on `http://localhost:8000`
-- `KYA_WORKSPACE_BOOTSTRAP_TOKEN` configured in API env
+- `LIMIQ_WORKSPACE_BOOTSTRAP_TOKEN` configured in API env
 - SDK JS built once:
 
 ```bash

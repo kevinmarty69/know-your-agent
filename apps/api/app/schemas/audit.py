@@ -65,8 +65,8 @@ def get_audit_query_params(
     event_type: Annotated[str | None, Query(description="Filter by event type")] = None,
     subject_id: Annotated[UUID | None, Query(description="Filter by subject id")] = None,
     decision: Annotated[DecisionValue | None, Query(description="ALLOW or DENY filter")] = None,
-    limit: Annotated[int, Query(ge=1, le=200, description="Page size")]=50,
-    offset: Annotated[int, Query(ge=0, description="Page offset")]=0,
+    limit: Annotated[int, Query(ge=1, le=200, description="Page size")] = 50,
+    offset: Annotated[int, Query(ge=0, description="Page offset")] = 0,
 ) -> AuditQueryParams:
     _validate_date_window(from_time, to_time)
     return AuditQueryParams(

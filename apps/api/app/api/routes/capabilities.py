@@ -39,9 +39,7 @@ Auth = Annotated[AuthContext, Depends(get_auth_context)]
             "description": "Agent revoked.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": {"code": "AGENT_REVOKED", "message": "Agent is revoked"}
-                    }
+                    "example": {"detail": {"code": "AGENT_REVOKED", "message": "Agent is revoked"}}
                 }
             },
         },

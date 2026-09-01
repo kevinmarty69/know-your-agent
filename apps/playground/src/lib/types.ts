@@ -17,6 +17,7 @@ export type ApiCallInput = {
   title: string
   baseUrl: string
   workspaceId: string
+  workspaceKey: string
   bootstrapToken?: string
   method: PlaygroundHttpMethod
   path: string

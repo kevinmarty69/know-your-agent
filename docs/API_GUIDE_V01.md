@@ -22,10 +22,11 @@ Notes:
 - Use `OPENAPI_SOURCE=url pnpm --filter playground types:api` to generate types from a live API.
 
 ## Authentication (MVP)
-Sensitive endpoints require header:
+Sensitive endpoints require both headers:
 - `X-Workspace-Id: <workspace_uuid>`
+- `X-Workspace-Key: <workspace_api_key>`
 
-The body/query `workspace_id` must match this header.
+The bootstrap response returns the API key once. The body/query `workspace_id` must match the authenticated workspace.
 
 Workspace bootstrap endpoint:
 - `POST /workspaces` requires `X-Bootstrap-Token: <bootstrap_token>`
@@ -65,6 +66,8 @@ Workspace bootstrap endpoint:
 - `CAPABILITY_EXPIRED`
 - `CAPABILITY_REVOKED`
 - `CAPABILITY_SCOPE_MISMATCH`
+- `CAPABILITY_TARGET_MISMATCH`
+- `CAPABILITY_POLICY_MISMATCH`
 - `SIGNATURE_INVALID`
 - `SPEND_LIMIT_EXCEEDED`
 - `RATE_LIMIT_EXCEEDED`

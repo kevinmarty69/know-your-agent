@@ -50,8 +50,8 @@ echo "[smoke] Start Express target"
 (
   cd "$EXPRESS_DIR"
   npm install --no-audit --no-fund --package-lock=false >/dev/null
-  PORT=3001 KYA_BASE_URL=http://localhost:8000 npm run dev
-) >/tmp/kya-express-smoke.log 2>&1 &
+  PORT=3001 LIMIQ_BASE_URL=http://localhost:8000 npm run dev
+) >/tmp/limiq-express-smoke.log 2>&1 &
 EXPRESS_PID="$!"
 
 wait_for_url "http://localhost:3001/health" 15 1 || {
@@ -64,9 +64,9 @@ echo "[smoke] Start FastAPI target"
   cd "$FASTAPI_DIR"
   python -m venv "$FASTAPI_VENV_DIR"
   source "$FASTAPI_VENV_DIR/bin/activate"
-  pip install -r requirements.txt >/tmp/kya-fastapi-smoke-pip.log 2>&1
-  PORT=8001 KYA_BASE_URL=http://localhost:8000 uvicorn main:app --host 127.0.0.1 --port 8001
-) >/tmp/kya-fastapi-smoke.log 2>&1 &
+  pip install -r requirements.txt >/tmp/limiq-fastapi-smoke-pip.log 2>&1
+  PORT=8001 LIMIQ_BASE_URL=http://localhost:8000 uvicorn main:app --host 127.0.0.1 --port 8001
+) >/tmp/limiq-fastapi-smoke.log 2>&1 &
 FASTAPI_PID="$!"
 
 wait_for_url "http://localhost:8001/health" 15 1 || {

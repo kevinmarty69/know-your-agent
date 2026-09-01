@@ -1,206 +1,116 @@
-# Limiq.io
+# Limiq
 
-Identity & Permission Layer for Autonomous Agents.
+> An AI agent asks to spend EUR 49. Limiq decides whether it can - before money moves.
 
-Current status: `v0.x` MVP. APIs may evolve between minor releases.
+[![CI](https://github.com/qurveai/limiq.io/actions/workflows/ci.yml/badge.svg)](https://github.com/qurveai/limiq.io/actions/workflows/ci.yml)
+[![Python 3.12](https://img.shields.io/badge/Python-3.12-3776AB)](https://www.python.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-SDK-3178C6)](packages/sdk-js)
+[![Apache 2.0](https://img.shields.io/badge/license-Apache--2.0-green)](LICENSE)
 
-## What Is Limiq.io
-Limiq.io is an Identity & Permission Layer for autonomous agents.
-It gives API and SDK primitives to control, verify, and audit agent actions.
+Limiq is a reference identity and permission layer for autonomous agents. It turns a signed action, a short-lived capability and the current policy into one deterministic answer: `ALLOW` or `DENY`.
 
-## Problem It Solves
-In agent-native systems, you need deterministic answers to:
-- who is acting?
-- what is this agent allowed to do?
-- should this action be allowed right now?
-- can we audit and revoke safely?
+It is intentionally a focused `v0.x` system, not an IAM suite.
 
-Limiq.io provides these controls via identity, policy/capability checks, verification, and audit trail integrity.
+## See it make a decision
 
-## What It Does
-- agent identity registry
-- policy binding
-- capability token issuance
-- signed action verification (ALLOW/DENY + reason)
-- audit trail with export and integrity check
-
-## Quickstart (Mac)
-Prerequisites:
-- Docker Desktop
-- Python 3.12+
-- `make`
-
-From repository root:
+The reference stack boots PostgreSQL, Redis, the API and a purchase target, then runs one allowed purchase and one denied purchase:
 
 ```bash
-make install
+docker compose -f examples/reference-implementation/docker-compose.yml \
+  up --build --abort-on-container-exit agent-demo
+```
+
+Expected business result:
+
+```text
+ALLOW  EUR 49  -> purchase executed
+DENY   EUR 149 -> SPEND_LIMIT_EXCEEDED
+```
+
+## The trust path
+
+```mermaid
+sequenceDiagram
+    participant A as Agent
+    participant L as Limiq
+    participant T as Target service
+
+    A->>L: Request scoped capability
+    L-->>A: Signed, short-lived JWT
+    A->>T: Signed action + capability
+    T->>L: Verify action
+    L->>L: Identity + scope + spend + rate + revocation
+    L-->>T: ALLOW / DENY + audit event
+```
+
+The security boundary is deliberately small:
+
+| Concern | Implementation |
+| --- | --- |
+| Tenant access | Workspace ID + HMAC-derived workspace key |
+| Agent identity | Ed25519 public keys and signed canonical envelopes |
+| Delegation | Short-lived EdDSA capability JWTs bound to agent, workspace and target |
+| Money | Exact `Decimal` comparisons, currency binding, policy and token limits |
+| Revocation | Agent and capability revocation with fail-closed Redis rate limiting |
+| Evidence | Append-only audit events linked by a per-workspace hash chain |
+
+## Run it for development
+
+Prerequisites: Python 3.12+, Docker and `make`.
+
+```bash
 cp apps/api/.env.example apps/api/.env
-# optional: copy root template for cross-component env hints
-cp .env.example .env
+make generate-dev-keypair       # paste the two printed values into apps/api/.env
+# set LIMIQ_WORKSPACE_BOOTSTRAP_TOKEN and LIMIQ_WORKSPACE_AUTH_SECRET in apps/api/.env
 docker compose up -d
+make install
 make migrate-up
 make dev
 ```
 
-Generate your dev keypair (required before starting API):
-```bash
-make generate-dev-keypair
-```
-This prints `KYA_JWT_PRIVATE_KEY_PEM` and `KYA_JWT_PUBLIC_KEY_PEM` values to paste into `apps/api/.env`.
+Then open [Swagger UI](http://localhost:8000/docs). `POST /workspaces` returns the workspace API key once; send it as `X-Workspace-Key` with `X-Workspace-Id` on tenant routes.
 
-API base URL:
-- `http://localhost:8000`
+## One repository, three proofs
 
-## Protect A Purchase In 5 Minutes
-Start API first (see Quickstart), then:
+- [`apps/api`](apps/api) - FastAPI verification core, policies, capabilities, revocation and audit integrity.
+- [`packages/sdk-js`](packages/sdk-js) and [`packages/sdk-python`](packages/sdk-python) - cross-language canonical signing and API clients.
+- [`apps/playground`](apps/playground) and [`examples`](examples) - an operator playground plus runnable Express/FastAPI integrations.
 
-```bash
-cd examples/purchase-target
-cp .env.example .env
-# put your API bootstrap token in KYA_BOOTSTRAP_TOKEN
-npm install
-npm run dev
-```
+Useful checks:
 
-In a second terminal:
-
-```bash
-cd examples/purchase-target
-set -a; source .env; set +a
-npm run demo
-```
-
-The demo does full API-first setup (`/workspaces`, `/agents`, `/policies`, `/bind`, `/capabilities/request`) and runs:
-- ALLOW purchase
-- DENY purchase (`SPEND_LIMIT_EXCEEDED`)
-
-## Verify Flow
-1. Create workspace + agent.
-2. Create and bind policy.
-3. Request capability token.
-4. Sign action envelope (canonical JSON + SHA-256 + Ed25519).
-5. Call `POST /verify`.
-6. Execute only when decision is `ALLOW`.
-
-Verify response:
-```json
-{
-  "decision": "ALLOW|DENY",
-  "reason_code": "string|null",
-  "audit_event_id": "uuid"
-}
-```
-
-## API Docs
-- OpenAPI JSON: `http://localhost:8000/openapi.json`
-- Swagger UI: `http://localhost:8000/docs`
-- ReDoc: `http://localhost:8000/redoc`
-
-Guides:
-- `docs/API_GUIDE_V01.md`
-- `docs/OPENAPI_REDOC_V01.md`
-- `docs/why-limiq.md`
-- `docs/quickstart.md`
-
-## Dev Commands
 ```bash
 make lint
 make test
-make migrate-up
 make verify-all
-make generate-dev-keypair
-```
-
-## Front Playground (Internal Dev Tool)
-The repository includes an API playground at `apps/playground` for rapid endpoint testing.
-
-Prerequisite:
-- `pnpm` (`corepack enable && corepack prepare pnpm@latest --activate`)
-
-Commands:
-```bash
-pnpm install
-pnpm --filter playground dev
-pnpm --filter playground build
-pnpm --filter playground types:api
-```
-
-`types:api` uses `openapi/openapi.snapshot.json` by default (CI-safe).
-Use live API instead:
-```bash
-OPENAPI_SOURCE=url pnpm --filter playground types:api
-```
-
-## SDK Usage
-## SDK JS (MVP)
-`packages/sdk-js` provides:
-- key generation (Ed25519, base64)
-- canonicalization + signature helpers
-- verify request builder
-- lightweight Limiq.io API client for capability + verify
-
-Commands:
-```bash
 pnpm --filter @limiq/sdk-js test
-pnpm --filter @limiq/sdk-js build
+pnpm --filter playground build
 ```
 
-Integration examples:
-- `examples/express-target/README.md`
-- `examples/fastapi-target/README.md`
-- `examples/purchase-target/README.md`
+The same canonical JSON vectors are exercised in Python and TypeScript so signatures do not depend on language-specific serialization.
 
-Runnable examples:
-```bash
-# Express target
-cd examples/express-target && npm install && npm run dev
+## API surface
 
-# FastAPI target
-cd examples/fastapi-target && python -m venv .venv && source .venv/bin/activate && pip install -r requirements.txt && uvicorn main:app --reload
+The core flow is intentionally linear:
+
+1. Bootstrap a workspace.
+2. Register an agent public key.
+3. Create and bind a policy.
+4. Issue a scoped capability.
+5. Verify the signed action.
+6. Query or export the audit trail.
+
+```json
+{
+  "decision": "DENY",
+  "reason_code": "SPEND_LIMIT_EXCEEDED",
+  "audit_event_id": "b9f..."
+}
 ```
 
-Smoke check for examples:
-```bash
-bash scripts/examples_smoke.sh
-bash scripts/examples_purchase_smoke.sh
-```
+Docs: [`API guide`](docs/API_GUIDE_V01.md) · [`architecture`](docs/ARCHITECTURE_V01.md) · [`threat model`](SECURITY.md) · [`why Limiq`](docs/why-limiq.md)
 
-## SDK Python (MVP)
-`packages/sdk-python` provides parity helpers for Python integrators:
-- canonicalization + Ed25519 signature
-- verify request builder
-- sync and async client helpers
+## Scope and limits
 
-Commands:
-```bash
-python -m pip install -e "packages/sdk-python[dev]"
-pytest -q packages/sdk-python/tests
-```
+Limiq is a production-minded reference implementation, not a hosted identity provider. It does not include human SSO, RBAC administration, key rotation workflows or multi-region deployment. The current workspace key model is suitable for controlled service-to-service environments; a public multi-user product should put an IdP and managed secret rotation in front of it.
 
-## Architecture Overview
-- `apps/api`: verify core, policy, capability, audit, revocation
-- `packages/sdk-js`, `packages/sdk-python`: signing/client SDKs
-- `examples/`: runnable target integrations
-- `apps/playground`: internal API test bench
-
-Detailed architecture:
-- `docs/ARCHITECTURE_V01.md`
-
-## Common Errors
-- `WORKSPACE_NOT_FOUND`: workspace id invalid or missing in current tenant context.
-- `POLICY_NOT_BOUND`: capability request/verify done before binding an active policy to the agent.
-- `SIGNATURE_INVALID`: signed payload does not match expected canonical envelope/hash.
-- `CAPABILITY_EXPIRED`: capability token expired; request a new capability.
-
-## Contributing
-- `CONTRIBUTING.md`
-- `CODE_OF_CONDUCT.md`
-
-## Security
-- `SECURITY.md`
-
-## Support
-- `SUPPORT.md`
-
-## License
-Apache-2.0 — see `LICENSE`.
+Apache-2.0 - see [`LICENSE`](LICENSE).

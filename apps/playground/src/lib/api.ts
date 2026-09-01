@@ -44,6 +44,7 @@ export async function callApi(input: ApiCallInput): Promise<ApiCallResult> {
 
   if (input.workspaceId && requiresWorkspaceHeader(path)) {
     headers["X-Workspace-Id"] = input.workspaceId
+    headers["X-Workspace-Key"] = input.workspaceKey
   }
 
   if (input.bootstrapToken && requiresBootstrapHeader(input.method, path)) {

@@ -75,9 +75,7 @@ def create_policy_endpoint(
             "description": "Agent is revoked and cannot be bound.",
             "content": {
                 "application/json": {
-                    "example": {
-                        "detail": {"code": "AGENT_REVOKED", "message": "Agent is revoked"}
-                    }
+                    "example": {"detail": {"code": "AGENT_REVOKED", "message": "Agent is revoked"}}
                 }
             },
         },

@@ -1,16 +1,16 @@
 from prometheus_client import CONTENT_TYPE_LATEST, Counter, Histogram, generate_latest
 
 VERIFY_TOTAL = Counter(
-    "kya_verify_total",
+    "limiq_verify_total",
     "Total number of verify decisions",
     labelnames=("decision", "reason_code"),
 )
 VERIFY_LATENCY_SECONDS = Histogram(
-    "kya_verify_latency_seconds",
+    "limiq_verify_latency_seconds",
     "Latency of verify endpoint in seconds",
 )
 AUDIT_INTEGRITY_TOTAL = Counter(
-    "kya_audit_integrity_total",
+    "limiq_audit_integrity_total",
     "Total number of audit integrity checks",
     labelnames=("status",),
 )

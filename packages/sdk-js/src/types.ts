@@ -69,5 +69,6 @@ export type RequestCapabilityResponse = {
 export type LimiqClientOptions = {
   baseUrl: string
   workspaceId: string
+  workspaceKey: string
   fetchImpl?: typeof fetch
 }

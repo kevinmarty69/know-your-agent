@@ -6,14 +6,20 @@ from sqlalchemy.orm import Session
 
 from app.core.auth import (
     AuthContext,
+    create_workspace_key,
     ensure_workspace_match,
     get_auth_context,
     require_bootstrap_token,
+    validate_workspace_auth_config,
 )
 from app.core.openapi import COMMON_ERROR_RESPONSES
 from app.db.session import get_db
 from app.modules.workspace_service.service import create_workspace, get_workspace
-from app.schemas.workspace import WorkspaceCreateRequest, WorkspaceResponse
+from app.schemas.workspace import (
+    WorkspaceCreatedResponse,
+    WorkspaceCreateRequest,
+    WorkspaceResponse,
+)
 
 router = APIRouter(tags=["workspaces"])
 DbSession = Annotated[Session, Depends(get_db)]
@@ -23,7 +29,7 @@ BootstrapGuard = Annotated[None, Depends(require_bootstrap_token)]
 
 @router.post(
     "/workspaces",
-    response_model=WorkspaceResponse,
+    response_model=WorkspaceCreatedResponse,
     status_code=201,
     summary="Create Workspace",
     description="Creates a workspace for local bootstrap/dev flows.",
@@ -51,7 +57,7 @@ BootstrapGuard = Annotated[None, Depends(require_bootstrap_token)]
                             "code": "WORKSPACE_BOOTSTRAP_DISABLED",
                             "message": (
                                 "Workspace bootstrap is disabled; configure "
-                                "KYA_WORKSPACE_BOOTSTRAP_TOKEN"
+                                "LIMIQ_WORKSPACE_BOOTSTRAP_TOKEN"
                             ),
                         }
                     }
@@ -64,9 +70,13 @@ def create_workspace_endpoint(
     payload: WorkspaceCreateRequest,
     _: BootstrapGuard,
     db: DbSession,
-) -> WorkspaceResponse:
+) -> WorkspaceCreatedResponse:
+    validate_workspace_auth_config()
     workspace = create_workspace(db, payload)
-    return WorkspaceResponse.model_validate(workspace)
+    return WorkspaceCreatedResponse(
+        **WorkspaceResponse.model_validate(workspace).model_dump(),
+        api_key=create_workspace_key(workspace.id),
+    )
 
 
 @router.get(

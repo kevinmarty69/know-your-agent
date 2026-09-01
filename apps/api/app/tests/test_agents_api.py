@@ -81,8 +81,8 @@ def test_get_agent_workspace_mismatch_denied(client: TestClient, workspace_id: s
         headers={"X-Workspace-Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"},
     )
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "WORKSPACE_MISMATCH"
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "AUTH_WORKSPACE_KEY_INVALID"
 
 
 def test_revoke_agent_success_and_double_revoke_conflict(
@@ -165,9 +165,7 @@ def test_agent_events_written_to_audit_log(
     assert agent.status == "revoked"
 
 
-def test_revoke_agent_workspace_mismatch_denied(
-    client: TestClient, workspace_id: str
-) -> None:
+def test_revoke_agent_workspace_mismatch_denied(client: TestClient, workspace_id: str) -> None:
     create = client.post(
         "/agents",
         json={
@@ -185,5 +183,5 @@ def test_revoke_agent_workspace_mismatch_denied(
         headers={"X-Workspace-Id": "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"},
     )
 
-    assert response.status_code == 403
-    assert response.json()["detail"]["code"] == "WORKSPACE_MISMATCH"
+    assert response.status_code == 401
+    assert response.json()["detail"]["code"] == "AUTH_WORKSPACE_KEY_INVALID"

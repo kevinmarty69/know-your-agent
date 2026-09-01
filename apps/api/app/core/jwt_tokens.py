@@ -16,6 +16,7 @@ def build_capability_claims(
     workspace_id: UUID,
     scopes: list[str],
     limits: dict[str, object],
+    target_service: str,
     policy_id: UUID,
     policy_version: int,
     jti: str,
@@ -29,6 +30,7 @@ def build_capability_claims(
         "workspace_id": str(workspace_id),
         "scopes": scopes,
         "limits": limits,
+        "target_service": target_service,
         "policy_id": str(policy_id),
         "policy_version": policy_version,
         "iat": int(now.timestamp()),
@@ -43,7 +45,7 @@ def encode_capability_token(claims: dict[str, object]) -> str:
         claims,
         private_key,
         algorithm=ALGO,
-        headers={"kid": settings.kya_jwt_kid},
+        headers={"kid": settings.limiq_jwt_kid},
     )
 
 
@@ -54,6 +56,6 @@ def decode_capability_token(token: str) -> dict[str, object]:
         public_key,
         algorithms=[ALGO],
         leeway=settings.jwt_leeway_seconds,
-        options={"require": ["sub", "workspace_id", "exp", "iat", "jti"]},
+        options={"require": ["sub", "workspace_id", "target_service", "exp", "iat", "jti"]},
     )
     return cast(dict[str, object], claims)

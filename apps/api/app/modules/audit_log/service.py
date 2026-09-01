@@ -19,11 +19,7 @@ def append_audit_event(
     actor_type: str = "system",
 ) -> AuditEvent:
     db.execute(
-        text(
-            "SELECT pg_advisory_xact_lock("
-            "hashtextextended(CAST(:workspace_id AS text), 0)"
-            ")"
-        ),
+        text("SELECT pg_advisory_xact_lock(hashtextextended(CAST(:workspace_id AS text), 0))"),
         {"workspace_id": str(workspace_id)},
     )
     previous_hash = db.scalar(
@@ -38,7 +34,7 @@ def append_audit_event(
     event_hash = compute_audit_event_hash(
         event_id=event_id,
         workspace_id=workspace_id,
-        event_time=event_time.isoformat(),
+        event_time=event_time,
         event_type=event_type,
         actor_type=actor_type,
         actor_id=None,

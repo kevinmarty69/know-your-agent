@@ -1,14 +1,11 @@
+from decimal import Decimal, InvalidOperation
 from uuid import UUID
 
 from app.modules.revocation.service import check_rate_limit
 
 
-def scopes_allow_action(*, scopes: list[str], action_type: str, tool: str | None) -> bool:
-    if action_type in scopes:
-        return True
-    if tool and tool in scopes:
-        return True
-    return False
+def scopes_allow_action(*, scopes: list[str], action_type: str) -> bool:
+    return action_type in scopes
 
 
 def policy_allows_scope(*, policy_json: dict[str, object], requested_scopes: list[str]) -> bool:
@@ -26,20 +23,34 @@ def policy_allows_spend_request(
     requested_limits: dict[str, object],
 ) -> bool:
     spend = policy_json.get("spend")
-    if not isinstance(spend, dict):
-        return True
-
-    max_per_tx = spend.get("max_per_tx")
     req_amount = requested_limits.get("amount")
-    if max_per_tx is None or req_amount is None:
-        return True
+    if not isinstance(spend, dict):
+        return req_amount is None or _valid_amount(req_amount)
+    if req_amount is None:
+        return spend.get("max_per_tx") is None
+    return _spend_within_limit(limit=spend, requested=requested_limits)
 
+
+def _amount(value: object) -> Decimal | None:
     try:
-        req_value = float(str(req_amount))
-        max_value = float(str(max_per_tx))
-        return req_value <= max_value
-    except (TypeError, ValueError):
+        parsed = Decimal(str(value))
+    except (InvalidOperation, ValueError):
+        return None
+    return parsed if parsed.is_finite() and parsed >= 0 else None
+
+
+def _valid_amount(value: object) -> bool:
+    return _amount(value) is not None
+
+
+def _spend_within_limit(*, limit: dict[str, object], requested: dict[str, object]) -> bool:
+    requested_amount = _amount(requested.get("amount"))
+    max_amount = _amount(limit.get("max_per_tx", limit.get("amount")))
+    if requested_amount is None or max_amount is None or requested_amount > max_amount:
         return False
+
+    currency = limit.get("currency")
+    return currency is None or requested.get("currency") == currency
 
 
 def policy_allows_payload_spend(
@@ -48,20 +59,22 @@ def policy_allows_payload_spend(
     payload: dict[str, object],
 ) -> bool:
     spend = policy_json.get("spend")
-    if not isinstance(spend, dict):
-        return True
-
-    max_per_tx = spend.get("max_per_tx")
     amount = payload.get("amount")
-    if max_per_tx is None or amount is None:
-        return True
+    if not isinstance(spend, dict):
+        return amount is None or _valid_amount(amount)
+    if amount is None:
+        return spend.get("max_per_tx") is None
+    return _spend_within_limit(limit=spend, requested=payload)
 
-    try:
-        amount_value = float(str(amount))
-        max_value = float(str(max_per_tx))
-        return amount_value <= max_value
-    except (TypeError, ValueError):
-        return False
+
+def capability_allows_payload_spend(
+    *,
+    limits: dict[str, object],
+    payload: dict[str, object],
+) -> bool:
+    if payload.get("amount") is None:
+        return limits.get("amount") is None
+    return _spend_within_limit(limit=limits, requested=payload)
 
 
 def policy_allows_rate(
